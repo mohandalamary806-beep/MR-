@@ -6,6 +6,8 @@
     <title>MR جيمنج V5 | المنصة المعتمدة لكل الجيمرز</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Sign-In SDK -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -87,15 +89,12 @@
             to   { opacity: 1; transform: scale(1) translateY(0); }
         }
 
-        /* ===== Like / Dislike toggle buttons ===== */
         .btn-like.liked   { color: #a78bfa; background: rgba(139,92,246,0.18); border-color: rgba(139,92,246,0.5); }
         .btn-dislike.disliked { color: #f87171; background: rgba(239,68,68,0.15); border-color: rgba(239,68,68,0.45); }
 
-        /* ===== SEO Score bar ===== */
         .seo-bar-track { background: #1e293b; border-radius: 9999px; height: 6px; }
         .seo-bar-fill  { height: 6px; border-radius: 9999px; transition: width 0.6s ease; }
 
-        /* ===== Toast notification ===== */
         #toast {
             position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px);
             background: #1e1b4b; border: 1px solid rgba(139,92,246,0.5);
@@ -105,13 +104,21 @@
             opacity: 0; z-index: 9999; white-space: nowrap;
         }
         #toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+        /* Google Sign-In Customization */
+        #g_id_onload {
+            display: none;
+        }
+        .g_id_signin {
+            width: 100%;
+        }
     </style>
 </head>
 <body class="text-gray-100 min-h-screen relative selection:bg-purple-600 selection:text-white">
 
     <div class="glow-sphere"></div>
 
-    <!-- بار التنقل العلوي -->
+    <!-- Navigation Bar -->
     <nav class="bg-slate-950/90 backdrop-blur-md border-b border-purple-950/60 p-4 sticky top-0 z-50">
         <div class="container mx-auto flex flex-col md:flex-row justify-between items-center gap-4 px-4">
             <div class="flex items-center space-x-3 space-x-reverse">
@@ -127,30 +134,29 @@
             </div>
 
             <div id="auth-zone">
-                <button onclick="mockGoogleLogin()" class="bg-white hover:bg-gray-100 text-gray-900 font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-2 shadow-lg transition">
-                    <svg class="w-4 h-4" viewBox="0 0 24 24">
-                        <path fill="#EA4335" d="M12.24 10.285V13.4h6.86c-.277 1.56-1.602 4.585-6.86 4.585-4.54 0-8.24-3.765-8.24-8.4s3.7-8.4 8.24-8.4c2.58 0 4.307 1.095 5.298 2.045l2.465-2.37C18.285 1.05 15.53 0 12.24 0 5.48 0 0 5.48 0 12.24s5.48 12.24 12.24 12.24c7.06 0 11.75-4.97 11.75-11.96 0-.805-.085-1.42-.19-1.935H12.24z"/>
-                    </svg>
-                    تسجيل الدخول بحساب Google
-                </button>
+                <div id="g_id_onload"
+                     data-client_id="YOUR_GOOGLE_CLIENT_ID_HERE"
+                     data-callback="handleGoogleSignIn">
+                </div>
+                <div id="googleSignInButton" class="g_id_signin" data-type="standard" data-size="large" data-theme="dark" data-text="signin_with"></div>
             </div>
         </div>
     </nav>
 
-    <!-- الهيدر الرئيسي -->
+    <!-- Header -->
     <header class="text-center py-12 px-4 max-w-4xl mx-auto">
         <span class="text-xs uppercase tracking-widest text-purple-400 font-bold bg-purple-950/40 px-4 py-1.5 rounded-full border border-purple-900/50 mb-3 inline-block">
-            نسخة الشغل العالي V5 PRO
+            نسخة الإنتاج V5 PRO
         </span>
         <h2 class="text-4xl md:text-5xl font-black mb-4 leading-tight">
             المكان الأول لتظبيط ومشاركة السكربتات
         </h2>
     </header>
 
-    <!-- ================= الصفحة 1: الأدوات ================= -->
+    <!-- ================= Main Hub ================= -->
     <div id="main-hub" class="tab-content active container mx-auto px-4 pb-24 max-w-7xl">
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <!-- أداة 1: مولد الأفكار -->
+            <!-- Tool 1: Idea Generator -->
             <section class="glass-card p-6 rounded-2xl flex flex-col justify-between">
                 <div>
                     <div class="flex items-center space-x-3 space-x-reverse mb-4">
@@ -165,8 +171,6 @@
                         <option value="pubg">ببجي موبايل</option>
                         <option value="minecraft">ماين كرافت</option>
                         <option value="fortnite">فورت نايت</option>
-                        <option value="valorant">فالورانت</option>
-                        <option value="bloxfruits">بلوكس فروتس</option>
                     </select>
                 </div>
                 <div>
@@ -175,7 +179,7 @@
                 </div>
             </section>
 
-            <!-- أداة 2: كلمات السيو والتاجات -->
+            <!-- Tool 2: SEO Keywords -->
             <section class="glass-card p-6 rounded-2xl flex flex-col justify-between">
                 <div>
                     <div class="flex items-center space-x-3 space-x-reverse mb-4">
@@ -198,7 +202,7 @@
                 </div>
             </section>
 
-            <!-- أداة 3: رفع سكربت جديد -->
+            <!-- Tool 3: Upload Script -->
             <section class="glass-card p-6 rounded-2xl flex flex-col justify-between">
                 <div>
                     <div class="flex items-center space-x-3 space-x-reverse mb-4">
@@ -213,23 +217,22 @@
         </div>
     </div>
 
-    <!-- ================= الصفحة 2: مكتبة السكربتات العامة ================= -->
+    <!-- ================= Scripts Library ================= -->
     <div id="scripts-explore" class="tab-content container mx-auto px-4 pb-24 max-w-4xl">
         <div class="glass-card p-6 rounded-2xl">
             <h3 class="text-2xl font-bold text-blue-400 mb-6">🌐 مكتبة السكربتات العامة</h3>
             <div id="publicScriptsContainer" class="space-y-4">
-                <!-- السكربتات تضاف وتدار بالكامل هنا -->
+                <!-- Scripts render here -->
             </div>
         </div>
     </div>
 
-    <!-- ================= الصفحة 3: ساحة التعليقات والردود والتحكم الكامل ================= -->
+    <!-- ================= Comments Section ================= -->
     <div id="comments-section" class="tab-content container mx-auto px-4 pb-24 max-w-4xl">
         <div class="glass-card p-6 rounded-2xl">
             <h3 class="text-2xl font-bold text-purple-400 mb-4">💬 ساحة التعليقات والنقاشات</h3>
             
             <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-800 mb-6">
-                <!-- إشعار عند الرد على شخص -->
                 <div id="replyingNotice" class="hidden text-xs text-amber-400 mb-2 flex justify-between items-center bg-amber-950/30 p-2 rounded-lg">
                     <span id="replyingText">أنت تقوم بالرد على شخص...</span>
                     <button onclick="cancelReplyMode()" class="text-rose-400 underline">إلغاء الرد</button>
@@ -242,12 +245,12 @@
             </div>
 
             <div id="commentsContainer" class="space-y-4">
-                <!-- التعليقات والردود تضاف هنا ديناميكياً -->
+                <!-- Comments render here -->
             </div>
         </div>
     </div>
 
-    <!-- ================= الصفحة 4: لوحة بلاغات الإدارة ================= -->
+    <!-- ================= Admin Reports ================= -->
     <div id="admin-reports" class="tab-content container mx-auto px-4 pb-24 max-w-4xl">
         <div class="glass-card p-6 rounded-2xl">
             <div class="flex justify-between items-center mb-6">
@@ -267,7 +270,7 @@
     <!-- ===== Toast ===== -->
     <div id="toast"></div>
 
-    <!-- ===== Modal: تعديل السكربت ===== -->
+    <!-- ===== Edit Script Modal ===== -->
     <div id="editScriptModal" class="modal-overlay" onclick="closeModal('editScriptModal', event)">
         <div class="modal-box">
             <div class="flex justify-between items-center mb-5">
@@ -286,7 +289,7 @@
         </div>
     </div>
 
-    <!-- ===== Modal: تعديل التعليق ===== -->
+    <!-- ===== Edit Comment Modal ===== -->
     <div id="editCommentModal" class="modal-overlay" onclick="closeModal('editCommentModal', event)">
         <div class="modal-box">
             <div class="flex justify-between items-center mb-5">
@@ -303,7 +306,7 @@
         </div>
     </div>
 
-    <!-- ===== Modal: تقديم بلاغ ===== -->
+    <!-- ===== Report Modal ===== -->
     <div id="reportModal" class="modal-overlay" onclick="closeModal('reportModal', event)">
         <div class="modal-box" style="max-width:480px;">
             <div class="flex justify-between items-center mb-5">
@@ -311,7 +314,6 @@
                 <button onclick="closeModalDirect('reportModal')" class="text-gray-500 hover:text-white text-xl leading-none">✕</button>
             </div>
 
-            <!-- جسم الفورم -->
             <div id="reportFormBody">
                 <div class="flex items-center gap-2 bg-slate-800/60 border border-slate-700 rounded-xl px-3 py-2 mb-4">
                     <span class="text-xs text-gray-400">نوع البلاغ:</span>
@@ -342,7 +344,6 @@
                 </div>
             </div>
 
-            <!-- رسالة النجاح بعد الإرسال -->
             <div id="reportSubmitResult" class="hidden text-center py-4">
                 <div class="text-4xl mb-3">✅</div>
                 <p class="text-green-400 font-bold text-sm mb-1">تم إرسال البلاغ بنجاح!</p>
@@ -351,7 +352,8 @@
             </div>
         </div>
     </div>
-    <!-- ===== Modal: تعديل الرد ===== -->
+
+    <!-- ===== Edit Reply Modal ===== -->
     <div id="editReplyModal" class="modal-overlay" onclick="closeModal('editReplyModal', event)">
         <div class="modal-box">
             <div class="flex justify-between items-center mb-5">
@@ -369,7 +371,7 @@
         </div>
     </div>
 
-    <!-- ===== Modal: تأكيد حذف الرد ===== -->
+    <!-- ===== Delete Reply Modal ===== -->
     <div id="deleteReplyModal" class="modal-overlay" onclick="closeModal('deleteReplyModal', event)">
         <div class="modal-box" style="max-width:420px;">
             <div class="flex justify-between items-center mb-4">
@@ -391,10 +393,17 @@
     </div>
 
     <script>
+        // ================== CONFIGURATION ==================
+        // استبدل هذا بـ Client ID الحقيقي من Google Cloud Console
+        const GOOGLE_CLIENT_ID = "YOUR_GOOGLE_CLIENT_ID_HERE.apps.googleusercontent.com";
+        
+        // Backend API URL (عند النزول يكون الخادم الحقيقي)
+        const API_BASE_URL = "https://your-backend-api.com/api"; // غير هذا
+        
         let currentUser = null;
         let selectedReplyCommentId = null;
 
-        // ================= البيانات الافتراضية =================
+        // ================== DEFAULT DATA ==================
         const DEFAULT_SCRIPTS = [
             { id: 101, title: "سكربت التجميع التلقائي الفائق | Blox Fruits", code: "loadstring(game:HttpGet('https://raw.githubusercontent.com/Example/Main/lua'))()", author: "Legend_Gamer", likes: 45, dislikes: 0, likedByMe: false, dislikedByMe: false, isUser: false },
             { id: 102, title: "كود ماب الهروب الأسطوري (أوبي الألوان)", code: "Map_Asset_ID: [ROBLOX-9921044521-COLOR]", author: "Dev_Ahmed", likes: 21, dislikes: 0, likedByMe: false, dislikedByMe: false, isUser: false }
@@ -406,11 +415,19 @@
             ]}
         ];
 
-        // ================= localStorage helpers =================
+        // ================== STORAGE & DATA MANAGEMENT ==================
+        let scriptsArray  = [];
+        let commentsArray = [];
+        let adminReports  = [];
+
         function saveData() {
+            // حفظ محلي للـ demo، لكن يجب أن يكون البيانات محفوظة في الخادم
             localStorage.setItem('mrg_scripts',  JSON.stringify(scriptsArray));
             localStorage.setItem('mrg_comments', JSON.stringify(commentsArray));
             localStorage.setItem('mrg_reports',  JSON.stringify(adminReports));
+            
+            // في الإنتاج: أرسل البيانات للخادم
+            // syncDataToServer();
         }
 
         function loadData() {
@@ -422,196 +439,148 @@
                 commentsArray = c ? JSON.parse(c) : DEFAULT_COMMENTS;
                 adminReports  = r ? JSON.parse(r) : [];
             } catch(e) {
+                console.error('خطأ في تحميل البيانات:', e);
                 scriptsArray  = DEFAULT_SCRIPTS;
                 commentsArray = DEFAULT_COMMENTS;
                 adminReports  = [];
             }
         }
 
-        function loadUser() {
-            try {
-                const u = localStorage.getItem('mrg_user');
-                if(u) {
-                    currentUser = JSON.parse(u);
-                    applyLoggedInUI();
-                }
-            } catch(e) {}
+        function saveAuthToken(token) {
+            // حفظ آمن للـ token (في الإنتاج استخدم httpOnly cookies)
+            localStorage.setItem('mrg_auth_token', token);
         }
 
-        // ================= تحميل البيانات =================
-        let scriptsArray  = [];
-        let commentsArray = [];
-        let adminReports  = [];
+        function getAuthToken() {
+            return localStorage.getItem('mrg_auth_token');
+        }
 
-        window.onload = function() {
-            loadData();
-            loadUser();
-            renderScripts();
-            renderComments();
-        };
+        function clearAuthToken() {
+            localStorage.removeItem('mrg_auth_token');
+        }
 
+        // ================== GOOGLE SIGN-IN HANDLER ==================
+        function handleGoogleSignIn(response) {
+            console.log('Google Sign-In Response:', response);
+            
+            if (response.credential) {
+                const token = response.credential;
+                
+                // فك ترميز JWT (للـ demo فقط)
+                try {
+                    const base64Url = token.split('.')[1];
+                    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                    const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => {
+                        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                    }).join(''));
+                    
+                    const userData = JSON.parse(jsonPayload);
+                    console.log('User Data:', userData);
+                    
+                    // حفظ بيانات المستخدم
+                    currentUser = {
+                        id: userData.sub,
+                        name: userData.name,
+                        email: userData.email,
+                        picture: userData.picture,
+                        token: token,
+                        loginTime: new Date().toISOString()
+                    };
+                    
+                    // حفظ الـ token
+                    saveAuthToken(token);
+                    
+                    // تطبيق واجهة المستخدم
+                    applyLoggedInUI();
+                    
+                    // أرسل البيانات للخادم للتحقق
+                    verifyTokenOnServer(token);
+                    
+                    showToast('✅ تم تسجيل الدخول بنجاح! أهلاً بك 🎮');
+                } catch(e) {
+                    console.error('خطأ في معالجة بيانات المستخدم:', e);
+                    showToast('⚠️ حدث خطأ في معالجة بيانات تسجيل الدخول');
+                }
+            }
+        }
+
+        // ================== SERVER VERIFICATION ==================
+        function verifyTokenOnServer(token) {
+            // هذه الدالة تتصل بالخادم للتحقق من الـ token
+            fetch(`${API_BASE_URL}/auth/verify-google-token`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ token: token })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    console.log('✅ تم التحقق من الـ token بنجاح');
+                    // حفظ session token من الخادم
+                    if (data.sessionToken) {
+                        saveAuthToken(data.sessionToken);
+                    }
+                } else {
+                    console.error('❌ فشل التحقق من الـ token:', data.message);
+                    logoutUser();
+                }
+            })
+            .catch(err => {
+                console.error('❌ خطأ في الاتصال بالخادم:', err);
+                // في الـ demo نتابع، لكن في الإنتاج نسجل الخروج
+            });
+        }
+
+        // ================== UI FUNCTIONS ==================
         function applyLoggedInUI() {
-            document.getElementById('auth-zone').innerHTML = `
-                <div class="flex items-center gap-2 bg-purple-950/60 border border-purple-800 px-3 py-1.5 rounded-xl text-xs">
-                    <span class="font-bold text-purple-300">👤 ${currentUser.name}</span>
-                    <button onclick="logoutUser()" class="text-rose-400 underline mr-1">خروج</button>
+            const authZone = document.getElementById('auth-zone');
+            authZone.innerHTML = `
+                <div class="flex items-center gap-3 bg-purple-950/60 border border-purple-800 px-3 py-1.5 rounded-xl text-xs">
+                    <img src="${currentUser.picture}" alt="${currentUser.name}" class="w-6 h-6 rounded-full border border-purple-600">
+                    <div class="flex flex-col">
+                        <span class="font-bold text-purple-300 text-xs">${currentUser.name}</span>
+                        <span class="text-[10px] text-gray-500">${currentUser.email}</span>
+                    </div>
+                    <button onclick="logoutUser()" class="text-rose-400 underline ml-2 hover:text-rose-300">خروج</button>
                 </div>
             `;
+            
             document.getElementById('comment-auth-warning').innerHTML = "✅ تم تسجيل الدخول بنجاح. يمكنك الآن النشر، التعديل، الحذف، الرد والإعجاب.";
             document.getElementById('comment-auth-warning').className = "text-xs text-green-400";
+            
             const submitBtn = document.getElementById('submitCommentBtn');
             submitBtn.removeAttribute('disabled');
             submitBtn.className = "bg-purple-600 hover:bg-purple-500 text-white font-bold px-5 py-2 rounded-lg text-xs cursor-pointer transition";
+            
             document.getElementById('btn-admin-reports').classList.remove('hidden');
+            
             renderScripts();
             renderComments();
         }
 
-        function mockGoogleLogin() {
-            currentUser = { name: "جيمر_مطور (أنت)" };
-            localStorage.setItem('mrg_user', JSON.stringify(currentUser));
-            applyLoggedInUI();
-        }
-
         function logoutUser() {
+            // حذف البيانات المحلية
+            currentUser = null;
+            clearAuthToken();
             localStorage.removeItem('mrg_user');
+            
+            // إعادة تحميل الصفحة
             location.reload();
         }
 
+        // ================== TAB SWITCHING ==================
         function switchTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
             document.getElementById(tabId).classList.add('active');
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('bg-purple-600', 'text-white'));
             document.getElementById('btn-' + tabId).classList.add('bg-purple-600', 'text-white');
-            // تحديث لوحة البلاغات تلقائياً عند فتحها
             if(tabId === 'admin-reports') renderAdminReports();
         }
 
-        // ================= تظبيط كلمات السيو المطور (أفكار ملائمة للموضوع) =================
-        function generateAdvancedTags() {
-            const keyword = document.getElementById('keywordInput').value.trim();
-            if(!keyword) { showToast('⚠️ اكتب الكلمة المفتاحية أولاً!'); return; }
-            
-            const resultDiv = document.getElementById('tagsResult');
-            resultDiv.classList.remove('hidden');
-            
-            // ===== تحليل ذكي للكلمة المفتاحية =====
-            const len = keyword.length;
-            const words = keyword.trim().split(/\s+/).length;
-            const hasYear = /202[3-9]|203\d/.test(keyword);
-            const isLongTail = words >= 3;
-            const isTooShort = len < 4;
-            const hasArabic = /[\u0600-\u06FF]/.test(keyword);
-            const hasGame = /سكربت|كود|ماب|لعبة|بلوكس|رولبوكس|فري فاير|ببجي|ماين كرافت|فورت نايت/i.test(keyword);
-
-            // حساب نقاط السيو
-            let score = 40;
-            let tips = [];
-            if(!isTooShort) score += 10;
-            if(words >= 2) { score += 10; } else { tips.push('⚡ أضف كلمة ثانية لتقوية الاستهداف'); }
-            if(isLongTail) { score += 15; } else { tips.push('📌 الكلمات الطويلة (Long Tail) تحصل على 3x مشاهدات'); }
-            if(hasGame)   { score += 15; } else { tips.push('🎮 دمج اسم لعبة مشهورة يرفع الكليكات'); }
-            if(hasYear)   { score += 10; } else { tips.push('📅 إضافة السنة ترفع الـ CTR بنسبة 40%'); }
-            if(hasArabic) score += 5;
-            if(score > 100) score = 100;
-
-            // لون العداد حسب النقاط
-            let barColor = score >= 75 ? '#10b981' : score >= 50 ? '#f59e0b' : '#ef4444';
-            let scoreLabel = score >= 75 ? '💪 قوي جداً' : score >= 50 ? '🔶 متوسط' : '🔴 ضعيف — يحتاج تحسين';
-
-            // النصيحة الذكية بحسب نوع الكلمة
-            let verdict = "";
-            if(keyword.includes("سكربت") || keyword.includes("كود")) {
-                verdict = `💡 <b>فكرة للموضوع:</b> ابدأ فيديو الشرح بلقطة أسلوب لعب سريعة تظهر النتيجة النهائية للكود مباشرة، ثم اطلب من المتابعين نسخ الكود من موقعك <b>MR جيمنج</b> لرفع ريتش المشاهدات والتفاعل.`;
-            } else if(keyword.includes("ماب") || keyword.includes("برمجة")) {
-                verdict = `💡 <b>فكرة للموضوع:</b> ننصحك بصناعة مقطع يعتمد على فكرة 'صنعت ماباً بناءً على طلبات المتابعين وصدمتني النتيجة!'؛ هذا يرفع معدل التعليقات لـ 3 أضعاف النسبة العادية.`;
-            } else {
-                verdict = `💡 <b>فكرة للموضوع:</b> يفضل دمج عنوان السنة الحالية مع وسم المقارنات أو التحديات المباشرة لضمان تفادي خروج المشاهد في أول 10 ثوانٍ من المقطع.`;
-            }
-
-            // عرض نتيجة التحليل الأولية
-            document.getElementById('seoVerdict').innerHTML = `
-                <div class="mb-3">
-                    <div class="flex justify-between items-center mb-1">
-                        <span class="font-bold text-pink-300 text-xs">📊 قوة الكلمة المفتاحية: <span style="color:${barColor}">${score}/100 — ${scoreLabel}</span></span>
-                    </div>
-                    <div class="seo-bar-track">
-                        <div class="seo-bar-fill" style="width:${score}%;background:${barColor};"></div>
-                    </div>
-                </div>
-                ${tips.length > 0 ? `<div class="mt-2 space-y-1">${tips.map(t=>`<p class="text-[11px] text-yellow-300">${t}</p>`).join('')}</div>` : '<p class="text-[11px] text-green-400">✅ الكلمة المفتاحية مثالية للسيو!</p>'}
-                <hr class="border-pink-900/40 my-2">
-                <div class="text-[11px] text-gray-300">${verdict}</div>
-                <div id="aiTagsLoading" class="mt-2 text-[11px] text-purple-400 flex items-center gap-1"><span class="animate-spin">⏳</span> الذكاء الاصطناعي يولد التاجات...</div>
-            `;
-
-            // توليد التاجات الأساسية فوراً
-            const list = document.getElementById('tagsList');
-            list.innerHTML = "";
-            const currentYear = new Date().getFullYear();
-            const baseTags = [
-                keyword,
-                `${keyword} ${currentYear}`,
-                `أسرار ${keyword}`,
-                `كيفية تشغيل ${keyword}`,
-                `احتراف ${keyword}`,
-                `أفضل ${keyword}`,
-                `شرح ${keyword} بالتفصيل`,
-                `#MR_Gaming`,
-                `#رولبوكس_عربي`,
-                `#سكربتات_الجيمرز`
-            ];
-            baseTags.forEach(t => {
-                const s = document.createElement('span');
-                const isHashtag = t.startsWith('#');
-                s.className = `bg-slate-800 px-2 py-0.5 rounded border text-[11px] cursor-pointer hover:opacity-80 transition ${isHashtag ? 'text-purple-300 border-purple-800' : 'text-pink-300 border-slate-700'}`;
-                s.innerText = t;
-                s.title = "اضغط لنسخ هذا التاج";
-                s.onclick = () => { navigator.clipboard.writeText(t); showToast(`📋 تم نسخ: ${t}`); };
-                list.appendChild(s);
-            });
-
-            // طلب تاجات ذكية إضافية من الذكاء الاصطناعي
-            const aiPrompt = `أنت خبير سيو يوتيوب للمحتوى العربي للجيمرز. للكلمة المفتاحية: "${keyword}"
-أعطني 15 هاشتاج وكلمة مفتاحية يوتيوب ذكية وفعّالة للمحتوى العربي.
-الرد يكون فقط كالآتي — كل كلمة/هاشتاج في سطر مستقل، بدون أرقام أو شرح:`;
-
-            fetch("https://api.anthropic.com/v1/messages", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    model: "claude-sonnet-4-6",
-                    max_tokens: 400,
-                    messages: [{ role: "user", content: aiPrompt }]
-                })
-            })
-            .then(r => r.json())
-            .then(data => {
-                const text = data.content?.map(i => i.text || "").join("") || "";
-                const aiTags = text.split("\n").map(t => t.trim()).filter(t => t.length > 1 && t.length < 60);
-                document.getElementById('aiTagsLoading')?.remove();
-                aiTags.forEach(t => {
-                    const s = document.createElement('span');
-                    const isHashtag = t.startsWith('#');
-                    s.className = `bg-purple-950/40 px-2 py-0.5 rounded border text-[11px] cursor-pointer hover:opacity-80 transition ${isHashtag ? 'text-purple-300 border-purple-700' : 'text-pink-300 border-pink-900/50'}`;
-                    s.innerText = t;
-                    s.title = "اضغط لنسخ هذا التاج";
-                    s.onclick = () => { navigator.clipboard.writeText(t); showToast(`📋 تم نسخ: ${t}`); };
-                    list.appendChild(s);
-                });
-            })
-            .catch(() => {
-                document.getElementById('aiTagsLoading')?.remove();
-            });
-        }
-
-        function copyAllTags() {
-            const kw = document.getElementById('keywordInput').value || "العاب";
-            navigator.clipboard.writeText(`${kw}, اسرار ${kw}, كيفية تشغيل ${kw}, احتراف ${kw}`);
-            showToast('📋 تم نسخ الكلمات المفتاحية بالكامل!');
-        }
-
-        // ================= إدارة السكربتات (عرض، لايك، تعديل، حذف، ريبورت) =================
+        // ================== SCRIPTS MANAGEMENT ==================
         function renderScripts() {
             const container = document.getElementById('publicScriptsContainer');
             container.innerHTML = "";
@@ -648,12 +617,21 @@
         }
 
         function publishUserScript() {
+            if(!currentUser) { showToast('⚠️ يجب تسجيل الدخول أولاً!'); return; }
             const title = document.getElementById('scriptTitleInput').value.trim();
             const code = document.getElementById('scriptCodeInput').value.trim();
             if(!title || !code) { showToast('⚠️ اكتب عنوان الكود والسكربت أولاً!'); return; }
             
-            const name = currentUser ? currentUser.name : "زائر مجهول";
-            scriptsArray.unshift({ id: Date.now(), title, code, author: name, likes: 0, dislikes: 0, likedByMe: false, dislikedByMe: false, isUser: !!currentUser });
+            scriptsArray.unshift({ 
+                id: Date.now(), 
+                title, code, 
+                author: currentUser.name, 
+                likes: 0, dislikes: 0, 
+                likedByMe: false, dislikedByMe: false, 
+                isUser: true,
+                userId: currentUser.id,
+                createdAt: new Date().toISOString()
+            });
             
             document.getElementById('scriptTitleInput').value = "";
             document.getElementById('scriptCodeInput').value = "";
@@ -730,7 +708,24 @@
             }
         }
 
-        // ================= إدارة التعليقات والردود واللايكات والتحكم =================
+        function copyDirectCode(btn) {
+            const card = btn.closest('.script-card');
+            const preEl = card ? card.querySelector('pre') : null;
+            const text = preEl ? preEl.textContent : '';
+            if(!text) { showToast('⚠️ مفيش كود للنسخ!'); return; }
+            navigator.clipboard.writeText(text).then(() => {
+                showToast('📋 تم نسخ الكود البرمجي بنجاح!');
+            }).catch(() => {
+                const ta = document.createElement('textarea');
+                ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+                document.body.appendChild(ta); ta.select();
+                document.execCommand('copy');
+                document.body.removeChild(ta);
+                showToast('📋 تم نسخ الكود البرمجي بنجاح!');
+            });
+        }
+
+        // ================== COMMENTS MANAGEMENT ==================
         function renderComments() {
             const container = document.getElementById('commentsContainer');
             container.innerHTML = "";
@@ -798,13 +793,14 @@
         }
 
         function submitCommentAction() {
+            if(!currentUser) { showToast('⚠️ يجب تسجيل الدخول أولاً!'); return; }
             const text = document.getElementById('commentTextInput').value.trim();
-            if(!text) return;
+            if(!text) { showToast('⚠️ اكتب التعليق أولاً!'); return; }
             
             if(selectedReplyCommentId !== null) {
                 const parentComment = commentsArray.find(c => c.id === selectedReplyCommentId);
                 if(parentComment) {
-                    parentComment.replies.push({ author: currentUser.name, text: text, isUser: true });
+                    parentComment.replies.push({ author: currentUser.name, text: text, isUser: true, userId: currentUser.id, createdAt: new Date().toISOString() });
                     saveData();
                     showToast('✅ تم إرسال الرد بنجاح!');
                 }
@@ -812,7 +808,8 @@
             } else {
                 commentsArray.unshift({
                     id: Date.now(), author: currentUser.name, text: text, likes: 0, dislikes: 0,
-                    likedByMe: false, dislikedByMe: false, isUser: true, replies: []
+                    likedByMe: false, dislikedByMe: false, isUser: true, userId: currentUser.id, 
+                    replies: [], createdAt: new Date().toISOString()
                 });
                 saveData();
                 showToast('✅ تم إضافة تعليقك!');
@@ -823,7 +820,7 @@
         }
 
         function setReplyMode(commentId, authorName) {
-            if(!currentUser) { alert('يجب تسجيل الدخول أولاً لتتمكن من الرد!'); return; }
+            if(!currentUser) { showToast('⚠️ يجب تسجيل الدخول أولاً لتتمكن من الرد!'); return; }
             selectedReplyCommentId = commentId;
             document.getElementById('replyingNotice').classList.remove('hidden');
             document.getElementById('replyingText').innerText = `أنت الآن تقوم بالرد على تعليق: (${authorName})`;
@@ -943,12 +940,12 @@
             showToast('🗑️ تم حذف الرد.');
         }
 
+        // ================== REPORTS ==================
         function reportAction(type, targetId) {
-            // حفظ بيانات البلاغ في الـ modal
+            if(!currentUser) { showToast('⚠️ يجب تسجيل الدخول للإبلاغ!'); return; }
             document.getElementById('reportTargetType').value = type;
             document.getElementById('reportTargetId').value = targetId || '';
             document.getElementById('reportTargetLabel').textContent = type === 'سكربت' ? '🔵 سكربت برمجي' : '💬 تعليق';
-            // إعادة تعيين الفورم
             document.getElementById('reportReasonSelect').value = '';
             document.getElementById('reportDetailsText').value = '';
             document.getElementById('reportSubmitResult').classList.add('hidden');
@@ -963,94 +960,22 @@
             const details = document.getElementById('reportDetailsText').value.trim();
             if(!reason) { showToast('⚠️ اختار سبب البلاغ أولاً!'); return; }
 
-            // تجميع البلاغ وحفظه في مصفوفة الإدارة
             const report = {
                 id: Date.now(),
                 type, targetId,
                 reason, details,
                 reporter: currentUser ? currentUser.name : 'زائر مجهول',
-                time: new Date().toLocaleString('ar-EG')
+                reporterId: currentUser ? currentUser.id : null,
+                time: new Date().toLocaleString('ar-EG'),
+                status: 'pending'
             };
             adminReports.push(report);
             saveData();
 
-            // إخفاء الفورم وعرض رسالة النجاح
             document.getElementById('reportFormBody').classList.add('hidden');
             document.getElementById('reportSubmitResult').classList.remove('hidden');
         }
 
-        function copyDirectCode(btn) {
-            // البحث عن أقرب عنصر pre داخل نفس البطاقة
-            const card = btn.closest('.script-card');
-            const preEl = card ? card.querySelector('pre') : null;
-            const text = preEl ? preEl.textContent : '';
-            if(!text) { showToast('⚠️ مفيش كود للنسخ!'); return; }
-            navigator.clipboard.writeText(text).then(() => {
-                showToast('📋 تم نسخ الكود البرمجي بنجاح!');
-            }).catch(() => {
-                // fallback للمتصفحات القديمة
-                const ta = document.createElement('textarea');
-                ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
-                document.body.appendChild(ta); ta.select();
-                document.execCommand('copy');
-                document.body.removeChild(ta);
-                showToast('📋 تم نسخ الكود البرمجي بنجاح!');
-            });
-        }
-
-        function generateAdvancedIdea() {
-            const genre = document.getElementById('gameGenre').value;
-            const resultDiv = document.getElementById('ideaResult');
-            resultDiv.classList.remove('hidden');
-            resultDiv.innerHTML = `<div class="flex items-center gap-2 text-purple-400"><span class="animate-spin text-lg">⏳</span> <span>جاري توليد الأفكار بالذكاء الاصطناعي...</span></div>`;
-
-            const genreLabels = {
-                roblox_dev: "تطوير وتصميم مابات الألعاب",
-                roblox_script: "مراجعة وتجربة السكربتات المساعدة",
-                freefire: "فري فاير",
-                pubg: "ببجي",
-                minecraft: "ماين كرافت",
-                fortnite: "فورت نايت"
-            };
-            const genreLabel = genreLabels[genre] || genre;
-
-            const prompt = `أنت خبير محتوى يوتيوب للجيمرز العرب. اقترح 25 فكرة فيديو إبداعية ومتنوعة لقناة جيمينج تخص: "${genreLabel}".
-
-كل فكرة تكون في سطر واحد بهذا الشكل:
-[رقم]. [إيموجي] [عنوان جذاب للفيديو] — [جملة واحدة تشرح الأسلوب أو الهوك]
-
-يجب أن تكون الأفكار متنوعة وتشمل: تحديات، مقارنات، تجارب، تريندات، ويزدار، قصص، عروض مباشرة، مقالب، تعاونات، راندم.
-الرد بالعربي فقط.`;
-
-            fetch("https://api.anthropic.com/v1/messages", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    model: "claude-sonnet-4-6",
-                    max_tokens: 1500,
-                    messages: [{ role: "user", content: prompt }]
-                })
-            })
-            .then(r => r.json())
-            .then(data => {
-                const text = data.content?.map(i => i.text || "").join("") || "⚠️ تعذّر التوليد، حاول مرة أخرى.";
-                const lines = text.split("\n").filter(l => l.trim());
-                let html = `<div class="mb-3 flex items-center gap-2"><span class="text-purple-400 font-bold text-xs">🎯 ${lines.length} فكرة مقترحة لـ "${genreLabel}"</span></div>`;
-                html += `<div class="space-y-1.5">`;
-                lines.forEach(line => {
-                    if(!line.trim()) return;
-                    html += `<div class="bg-slate-900/70 border border-slate-700/60 rounded-lg px-3 py-2 text-[11.5px] text-gray-200 leading-relaxed hover:border-purple-700/50 transition cursor-default">${line}</div>`;
-                });
-                html += `</div>`;
-                html += `<button onclick="generateAdvancedIdea()" class="mt-3 w-full bg-slate-800 hover:bg-slate-700 text-purple-300 text-xs py-2 rounded-lg border border-slate-700 transition">🔄 توليد أفكار جديدة</button>`;
-                resultDiv.innerHTML = html;
-            })
-            .catch(() => {
-                resultDiv.innerHTML = `<p class="text-rose-400 text-xs">⚠️ حدث خطأ في الاتصال، تحقق من الإنترنت وحاول مجدداً.</p>`;
-            });
-        }
-
-        // ================= لوحة البلاغات الواردة لصاحب الموقع =================
         function renderAdminReports() {
             const container = document.getElementById('adminReportsContainer');
             if(!container) return;
@@ -1093,7 +1018,151 @@
             showToast(`✅ ${action} بنجاح!`);
         }
 
-        // ===== Toast Helper =====
+        // ================== SEO & IDEAS ==================
+        function generateAdvancedTags() {
+            const keyword = document.getElementById('keywordInput').value.trim();
+            if(!keyword) { showToast('⚠️ اكتب الكلمة المفتاحية أولاً!'); return; }
+            
+            const resultDiv = document.getElementById('tagsResult');
+            resultDiv.classList.remove('hidden');
+            
+            const len = keyword.length;
+            const words = keyword.trim().split(/\s+/).length;
+            const hasYear = /202[3-9]|203\d/.test(keyword);
+            const isLongTail = words >= 3;
+            const isTooShort = len < 4;
+            const hasArabic = /[\u0600-\u06FF]/.test(keyword);
+            const hasGame = /سكربت|كود|ماب|لعبة|بلوكس|رولبوكس|فري فاير|ببجي|ماين كرافت|فورت نايت/i.test(keyword);
+
+            let score = 40;
+            let tips = [];
+            if(!isTooShort) score += 10;
+            if(words >= 2) { score += 10; } else { tips.push('⚡ أضف كلمة ثانية لتقوية الاستهداف'); }
+            if(isLongTail) { score += 15; } else { tips.push('📌 الكلمات الطويلة (Long Tail) تحصل على 3x مشاهدات'); }
+            if(hasGame)   { score += 15; } else { tips.push('🎮 دمج اسم لعبة مشهورة يرفع الكليكات'); }
+            if(hasYear)   { score += 10; } else { tips.push('📅 إضافة السنة ترفع الـ CTR بنسبة 40%'); }
+            if(hasArabic) score += 5;
+            if(score > 100) score = 100;
+
+            let barColor = score >= 75 ? '#10b981' : score >= 50 ? '#f59e0b' : '#ef4444';
+            let scoreLabel = score >= 75 ? '💪 قوي جداً' : score >= 50 ? '🔶 متوسط' : '🔴 ضعيف — يحتاج تحسين';
+
+            let verdict = "";
+            if(keyword.includes("سكربت") || keyword.includes("كود")) {
+                verdict = `💡 <b>فكرة للموضوع:</b> ابدأ فيديو الشرح بلقطة أسلوب لعب سريعة تظهر النتيجة النهائية للكود مباشرة.`;
+            } else if(keyword.includes("ماب") || keyword.includes("برمجة")) {
+                verdict = `💡 <b>فكرة للموضوع:</b> ننصحك بصناعة مقطع يعتمد على فكرة 'صنعت ماباً بناءً على طلبات المتابعين'.`;
+            } else {
+                verdict = `💡 <b>فكرة للموضوع:</b> يفضل دمج عنوان السنة الحالية مع وسم المقارنات لضمان تفادي خروج المشاهد.`;
+            }
+
+            document.getElementById('seoVerdict').innerHTML = `
+                <div class="mb-3">
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="font-bold text-pink-300 text-xs">📊 قوة الكلمة المفتاحية: <span style="color:${barColor}">${score}/100 — ${scoreLabel}</span></span>
+                    </div>
+                    <div class="seo-bar-track">
+                        <div class="seo-bar-fill" style="width:${score}%;background:${barColor};"></div>
+                    </div>
+                </div>
+                ${tips.length > 0 ? `<div class="mt-2 space-y-1">${tips.map(t=>`<p class="text-[11px] text-yellow-300">${t}</p>`).join('')}</div>` : '<p class="text-[11px] text-green-400">✅ الكلمة المفتاحية مثالية للسيو!</p>'}
+                <hr class="border-pink-900/40 my-2">
+                <div class="text-[11px] text-gray-300">${verdict}</div>
+            `;
+
+            const list = document.getElementById('tagsList');
+            list.innerHTML = "";
+            const currentYear = new Date().getFullYear();
+            const baseTags = [
+                keyword,
+                `${keyword} ${currentYear}`,
+                `أسرار ${keyword}`,
+                `كيفية تشغيل ${keyword}`,
+                `احتراف ${keyword}`,
+                `أفضل ${keyword}`,
+                `#MR_Gaming`,
+                `#رولبوكس_عربي`,
+                `#سكربتات_الجيمرز`
+            ];
+            baseTags.forEach(t => {
+                const s = document.createElement('span');
+                const isHashtag = t.startsWith('#');
+                s.className = `bg-slate-800 px-2 py-0.5 rounded border text-[11px] cursor-pointer hover:opacity-80 transition ${isHashtag ? 'text-purple-300 border-purple-800' : 'text-pink-300 border-slate-700'}`;
+                s.innerText = t;
+                s.title = "اضغط لنسخ هذا التاج";
+                s.onclick = () => { navigator.clipboard.writeText(t); showToast(`📋 تم نسخ: ${t}`); };
+                list.appendChild(s);
+            });
+        }
+
+        function copyAllTags() {
+            const kw = document.getElementById('keywordInput').value || "العاب";
+            navigator.clipboard.writeText(`${kw}, اسرار ${kw}, كيفية تشغيل ${kw}, احتراف ${kw}`);
+            showToast('📋 تم نسخ الكلمات المفتاحية بالكامل!');
+        }
+
+        function generateAdvancedIdea() {
+            const genre = document.getElementById('gameGenre').value;
+            const resultDiv = document.getElementById('ideaResult');
+            resultDiv.classList.remove('hidden');
+            resultDiv.innerHTML = `<div class="flex items-center gap-2 text-purple-400"><span class="animate-spin text-lg">⏳</span> <span>جاري توليد الأفكار بالذكاء الاصطناعي...</span></div>`;
+
+            const genreLabels = {
+                roblox_dev: "تطوير وتصميم مابات الألعاب",
+                roblox_script: "مراجعة وتجربة السكربتات المساعدة",
+                freefire: "فري فاير",
+                pubg: "ببجي",
+                minecraft: "ماين كرافت",
+                fortnite: "فورت نايت"
+            };
+            const genreLabel = genreLabels[genre] || genre;
+
+            const prompt = `أنت خبير محتوى يوتيوب للجيمرز العرب. اقترح 15 فكرة فيديو إبداعية ومتنوعة لقناة جيمينج تخص: "${genreLabel}".
+الرد بالعربي فقط. كل فكرة في سطر.`;
+
+            fetch("https://api.anthropic.com/v1/messages", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    model: "claude-sonnet-4-6",
+                    max_tokens: 1000,
+                    messages: [{ role: "user", content: prompt }]
+                })
+            })
+            .then(r => r.json())
+            .then(data => {
+                const text = data.content?.map(i => i.text || "").join("") || "⚠️ تعذّر التوليد، حاول مرة أخرى.";
+                const lines = text.split("\n").filter(l => l.trim());
+                let html = `<div class="mb-3 flex items-center gap-2"><span class="text-purple-400 font-bold text-xs">🎯 ${lines.length} فكرة مقترحة</span></div>`;
+                html += `<div class="space-y-1.5">`;
+                lines.forEach(line => {
+                    if(!line.trim()) return;
+                    html += `<div class="bg-slate-900/70 border border-slate-700/60 rounded-lg px-3 py-2 text-[11.5px] text-gray-200 leading-relaxed">${line}</div>`;
+                });
+                html += `</div>`;
+                html += `<button onclick="generateAdvancedIdea()" class="mt-3 w-full bg-slate-800 hover:bg-slate-700 text-purple-300 text-xs py-2 rounded-lg border border-slate-700 transition">🔄 توليد أفكار جديدة</button>`;
+                resultDiv.innerHTML = html;
+            })
+            .catch(err => {
+                console.error(err);
+                resultDiv.innerHTML = `<p class="text-rose-400 text-xs">⚠️ حدث خطأ في الاتصال، تحقق من الإنترنت وحاول مجدداً.</p>`;
+            });
+        }
+
+        // ================== MODAL HELPERS ==================
+        function closeModal(modalId, event) {
+            if(event.target.id === modalId) closeModalDirect(modalId);
+        }
+        function closeModalDirect(modalId) {
+            document.getElementById(modalId).classList.remove('open');
+        }
+        document.addEventListener('keydown', e => {
+            if(e.key === 'Escape') {
+                document.querySelectorAll('.modal-overlay.open').forEach(m => m.classList.remove('open'));
+            }
+        });
+
+        // ================== TOAST HELPER ==================
         let toastTimer = null;
         function showToast(msg) {
             const t = document.getElementById('toast');
@@ -1103,20 +1172,19 @@
             toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
         }
 
-        // ===== Modal Helpers =====
-        function closeModal(modalId, event) {
-            // إغلاق بالضغط خارج الصندوق فقط
-            if(event.target.id === modalId) closeModalDirect(modalId);
-        }
-        function closeModalDirect(modalId) {
-            document.getElementById(modalId).classList.remove('open');
-        }
-        // إغلاق بمفتاح ESC
-        document.addEventListener('keydown', e => {
-            if(e.key === 'Escape') {
-                document.querySelectorAll('.modal-overlay.open').forEach(m => m.classList.remove('open'));
+        // ================== INITIALIZATION ==================
+        window.onload = function() {
+            loadData();
+            renderScripts();
+            renderComments();
+            
+            // التحقق من وجود token محفوظ
+            const savedToken = getAuthToken();
+            if(savedToken) {
+                // محاولة استعادة الجلسة من الخادم
+                verifyTokenOnServer(savedToken);
             }
-        });
+        };
     </script>
 </body>
 </html>
