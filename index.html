@@ -1,0 +1,1122 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MR جيمنج V5 | المنصة المعتمدة لكل الجيمرز</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&display=swap" rel="stylesheet">
+    
+    <style>
+        *, *::before, *::after { box-sizing: border-box; }
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: radial-gradient(circle at top center, #0f1123 0%, #070814 100%);
+            overflow-x: hidden;
+            margin: 0;
+            padding: 0;
+        }
+        .glass-card {
+            background: rgba(15, 23, 42, 0.65);
+            backdrop-filter: blur(14px);
+            border: 1px solid rgba(139, 92, 246, 0.15);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .glass-card:hover {
+            border-color: rgba(139, 92, 246, 0.5);
+            box-shadow: 0 0 30px rgba(139, 92, 246, 0.2);
+            transform: translateY(-2px);
+        }
+        @keyframes dynamicgradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        .moving-neon-text {
+            background: linear-gradient(90deg, #a855f7, #f43f5e, #3b82f6, #10b981, #a855f7);
+            background-size: 400% 400%;
+            animation: dynamicgradient 8s ease infinite;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 20px rgba(168, 85, 247, 0.2);
+        }
+        .glow-sphere {
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(147, 51, 234, 0.08) 0%, rgba(0,0,0,0) 70%);
+            top: -10%;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: -1;
+            pointer-events: none;
+        }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #070814; }
+        ::-webkit-scrollbar-thumb { background: #4c1d95; border-radius: 4px; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* ===== Modal Overlay ===== */
+        .modal-overlay {
+            display: none;
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(6px);
+            z-index: 999;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-overlay.open { display: flex; }
+        .modal-box {
+            background: #0f1729;
+            border: 1px solid rgba(139,92,246,0.4);
+            border-radius: 1.25rem;
+            padding: 1.75rem;
+            width: 90%;
+            max-width: 520px;
+            box-shadow: 0 0 60px rgba(139,92,246,0.25);
+            animation: modalIn 0.25s cubic-bezier(0.4,0,0.2,1);
+        }
+        @keyframes modalIn {
+            from { opacity: 0; transform: scale(0.92) translateY(20px); }
+            to   { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        /* ===== Like / Dislike toggle buttons ===== */
+        .btn-like.liked   { color: #a78bfa; background: rgba(139,92,246,0.18); border-color: rgba(139,92,246,0.5); }
+        .btn-dislike.disliked { color: #f87171; background: rgba(239,68,68,0.15); border-color: rgba(239,68,68,0.45); }
+
+        /* ===== SEO Score bar ===== */
+        .seo-bar-track { background: #1e293b; border-radius: 9999px; height: 6px; }
+        .seo-bar-fill  { height: 6px; border-radius: 9999px; transition: width 0.6s ease; }
+
+        /* ===== Toast notification ===== */
+        #toast {
+            position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px);
+            background: #1e1b4b; border: 1px solid rgba(139,92,246,0.5);
+            color: #e9d5ff; padding: 10px 22px; border-radius: 9999px;
+            font-size: 13px; font-weight: 600;
+            transition: transform 0.35s cubic-bezier(0.4,0,0.2,1), opacity 0.35s;
+            opacity: 0; z-index: 9999; white-space: nowrap;
+        }
+        #toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+    </style>
+</head>
+<body class="text-gray-100 min-h-screen relative selection:bg-purple-600 selection:text-white">
+
+    <div class="glow-sphere"></div>
+
+    <!-- بار التنقل العلوي -->
+    <nav class="bg-slate-950/90 backdrop-blur-md border-b border-purple-950/60 p-4 sticky top-0 z-50">
+        <div class="container mx-auto flex flex-col md:flex-row justify-between items-center gap-4 px-4">
+            <div class="flex items-center space-x-3 space-x-reverse">
+                <span class="text-3xl">🎮</span>
+                <h1 class="text-3xl font-black tracking-wider moving-neon-text">MR جيمنج</h1>
+            </div>
+            
+            <div class="flex flex-wrap justify-center gap-2">
+                <button onclick="switchTab('main-hub')" id="btn-main-hub" class="tab-btn px-4 py-2 rounded-xl text-sm font-bold bg-purple-600 text-white transition">🛠️ عدد وأدوات سريعة</button>
+                <button onclick="switchTab('scripts-explore')" id="btn-scripts-explore" class="tab-btn px-4 py-2 rounded-xl text-sm font-medium text-gray-400 hover:text-white transition">🌐 مكتبة السكربتات العامة</button>
+                <button onclick="switchTab('comments-section')" id="btn-comments-section" class="tab-btn px-4 py-2 rounded-xl text-sm font-medium text-gray-400 hover:text-white transition">💬 ساحة التعليقات والنقاشات</button>
+                <button onclick="switchTab('admin-reports')" id="btn-admin-reports" class="tab-btn hidden px-4 py-2 rounded-xl text-sm font-medium text-gray-400 hover:text-white transition">🛡️ لوحة البلاغات</button>
+            </div>
+
+            <div id="auth-zone">
+                <button onclick="mockGoogleLogin()" class="bg-white hover:bg-gray-100 text-gray-900 font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-2 shadow-lg transition">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24">
+                        <path fill="#EA4335" d="M12.24 10.285V13.4h6.86c-.277 1.56-1.602 4.585-6.86 4.585-4.54 0-8.24-3.765-8.24-8.4s3.7-8.4 8.24-8.4c2.58 0 4.307 1.095 5.298 2.045l2.465-2.37C18.285 1.05 15.53 0 12.24 0 5.48 0 0 5.48 0 12.24s5.48 12.24 12.24 12.24c7.06 0 11.75-4.97 11.75-11.96 0-.805-.085-1.42-.19-1.935H12.24z"/>
+                    </svg>
+                    تسجيل الدخول بحساب Google
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- الهيدر الرئيسي -->
+    <header class="text-center py-12 px-4 max-w-4xl mx-auto">
+        <span class="text-xs uppercase tracking-widest text-purple-400 font-bold bg-purple-950/40 px-4 py-1.5 rounded-full border border-purple-900/50 mb-3 inline-block">
+            نسخة الشغل العالي V5 PRO
+        </span>
+        <h2 class="text-4xl md:text-5xl font-black mb-4 leading-tight">
+            المكان الأول لتظبيط ومشاركة السكربتات
+        </h2>
+    </header>
+
+    <!-- ================= الصفحة 1: الأدوات ================= -->
+    <div id="main-hub" class="tab-content active container mx-auto px-4 pb-24 max-w-7xl">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- أداة 1: مولد الأفكار -->
+            <section class="glass-card p-6 rounded-2xl flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center space-x-3 space-x-reverse mb-4">
+                        <div class="w-10 h-10 rounded-xl bg-purple-600/20 border border-purple-500 flex items-center justify-center text-xl">💡</div>
+                        <h3 class="text-xl font-bold text-purple-300">مُولد الأفكار والسيناريوهات</h3>
+                    </div>
+                    <label class="block text-xs font-bold text-gray-400 mb-2">نوع اللعبة أو المحتوى الخاص بك:</label>
+                    <select id="gameGenre" class="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-white mb-6 focus:outline-none focus:border-purple-500 text-sm">
+                        <option value="roblox_dev">تطوير وتصميم مابات الألعاب</option>
+                        <option value="roblox_script">مراجعة وتجربة السكربتات المساعدة</option>
+                        <option value="freefire">فري فاير</option>
+                        <option value="pubg">ببجي موبايل</option>
+                        <option value="minecraft">ماين كرافت</option>
+                        <option value="fortnite">فورت نايت</option>
+                        <option value="valorant">فالورانت</option>
+                        <option value="bloxfruits">بلوكس فروتس</option>
+                    </select>
+                </div>
+                <div>
+                    <button onclick="generateAdvancedIdea()" class="w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold py-3 px-4 rounded-xl shadow-lg text-sm">هات فكرة فيديو تريند 🎯</button>
+                    <div id="ideaResult" class="mt-4 p-4 bg-slate-950/90 rounded-xl border border-purple-900/40 hidden text-xs"></div>
+                </div>
+            </section>
+
+            <!-- أداة 2: كلمات السيو والتاجات -->
+            <section class="glass-card p-6 rounded-2xl flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center space-x-3 space-x-reverse mb-4">
+                        <div class="w-10 h-10 rounded-xl bg-pink-600/20 border border-pink-500 flex items-center justify-center text-xl">🚀</div>
+                        <h3 class="text-xl font-bold text-pink-300">مُظبط كلمات السيو والتاجات</h3>
+                    </div>
+                    <label class="block text-xs font-bold text-gray-400 mb-2">العنوان أو الكلمة المستهدفة:</label>
+                    <input type="text" id="keywordInput" placeholder="مثال: ماب البيوت، سكربت بلوكس..." class="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-white mb-6 focus:outline-none focus:border-pink-500 text-sm text-right">
+                </div>
+                <div>
+                    <button onclick="generateAdvancedTags()" class="w-full bg-gradient-to-r from-pink-600 to-rose-600 text-white font-bold py-3 px-4 rounded-xl shadow-lg text-sm">استخراج الكلمات والهاشتاجات 🔥</button>
+                    <div id="tagsResult" class="mt-4 p-4 bg-slate-950/90 rounded-xl border border-pink-900/40 hidden space-y-3 text-xs">
+                        <div id="seoVerdict" class="p-2 bg-pink-950/40 border border-pink-900/40 rounded-lg text-gray-200"></div>
+                        <div>
+                            <span class="text-pink-400 block font-bold mb-1">🔖 الكلمات المفتاحية المقترحة:</span>
+                            <div id="tagsList" class="flex flex-wrap gap-1"></div>
+                        </div>
+                        <button onclick="copyAllTags()" class="w-full bg-slate-900 text-pink-400 py-1.5 rounded-lg border border-slate-800 text-xs">📋 نسخ الكلمات المفتاحية</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- أداة 3: رفع سكربت جديد -->
+            <section class="glass-card p-6 rounded-2xl flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center space-x-3 space-x-reverse mb-4">
+                        <div class="w-10 h-10 rounded-xl bg-blue-600/20 border border-blue-500 flex items-center justify-center text-xl">📤</div>
+                        <h3 class="text-xl font-bold text-blue-300">مشاركة سكربت جديد</h3>
+                    </div>
+                    <input type="text" id="scriptTitleInput" placeholder="عنوان السكربت..." class="w-full bg-slate-900 border border-slate-800 rounded-xl p-2.5 text-white mb-2 text-sm text-right focus:outline-none focus:border-blue-500">
+                    <textarea id="scriptCodeInput" placeholder="-- ضع كود الـ Script هنا..." rows="4" class="w-full bg-slate-900 border border-slate-800 rounded-xl p-2.5 text-white text-xs font-mono text-left focus:outline-none focus:border-blue-500" style="direction: ltr;"></textarea>
+                </div>
+                <button onclick="publishUserScript()" class="w-full bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-bold py-3 px-4 rounded-xl shadow-lg text-sm">نشر الكود للمجتمع 🌐</button>
+            </section>
+        </div>
+    </div>
+
+    <!-- ================= الصفحة 2: مكتبة السكربتات العامة ================= -->
+    <div id="scripts-explore" class="tab-content container mx-auto px-4 pb-24 max-w-4xl">
+        <div class="glass-card p-6 rounded-2xl">
+            <h3 class="text-2xl font-bold text-blue-400 mb-6">🌐 مكتبة السكربتات العامة</h3>
+            <div id="publicScriptsContainer" class="space-y-4">
+                <!-- السكربتات تضاف وتدار بالكامل هنا -->
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= الصفحة 3: ساحة التعليقات والردود والتحكم الكامل ================= -->
+    <div id="comments-section" class="tab-content container mx-auto px-4 pb-24 max-w-4xl">
+        <div class="glass-card p-6 rounded-2xl">
+            <h3 class="text-2xl font-bold text-purple-400 mb-4">💬 ساحة التعليقات والنقاشات</h3>
+            
+            <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-800 mb-6">
+                <!-- إشعار عند الرد على شخص -->
+                <div id="replyingNotice" class="hidden text-xs text-amber-400 mb-2 flex justify-between items-center bg-amber-950/30 p-2 rounded-lg">
+                    <span id="replyingText">أنت تقوم بالرد على شخص...</span>
+                    <button onclick="cancelReplyMode()" class="text-rose-400 underline">إلغاء الرد</button>
+                </div>
+                <textarea id="commentTextInput" placeholder="اكتب كلامك هنا ودردش معنا..." rows="3" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-white text-sm focus:outline-none focus:border-purple-500 mb-3"></textarea>
+                <div class="flex justify-between items-center">
+                    <p class="text-xs text-amber-400" id="comment-auth-warning">⚠️ يرجى تسجيل الدخول أولاً لتتمكن من النشر، الرد والتحكم بالتعليقات.</p>
+                    <button onclick="submitCommentAction()" id="submitCommentBtn" disabled class="bg-purple-600/50 text-gray-400 font-bold px-5 py-2 rounded-lg text-xs cursor-not-allowed">أرسل كلامك 🚀</button>
+                </div>
+            </div>
+
+            <div id="commentsContainer" class="space-y-4">
+                <!-- التعليقات والردود تضاف هنا ديناميكياً -->
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= الصفحة 4: لوحة بلاغات الإدارة ================= -->
+    <div id="admin-reports" class="tab-content container mx-auto px-4 pb-24 max-w-4xl">
+        <div class="glass-card p-6 rounded-2xl">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-bold text-rose-400">🛡️ لوحة البلاغات الواردة</h3>
+                <button onclick="renderAdminReports()" class="text-xs bg-slate-800 hover:bg-slate-700 text-gray-300 px-3 py-1.5 rounded-lg transition">🔄 تحديث</button>
+            </div>
+            <div id="adminReportsContainer" class="space-y-3">
+                <p class="text-gray-500 text-sm text-center py-8">لا توجد بلاغات واردة حتى الآن.</p>
+            </div>
+        </div>
+    </div>
+
+    <footer class="text-center py-6 text-xs text-gray-600 bg-slate-950 border-t border-slate-900 mt-12">
+        <p>© 2026 MR جيمنج | كافة الحقوق محفوظة.</p>
+    </footer>
+
+    <!-- ===== Toast ===== -->
+    <div id="toast"></div>
+
+    <!-- ===== Modal: تعديل السكربت ===== -->
+    <div id="editScriptModal" class="modal-overlay" onclick="closeModal('editScriptModal', event)">
+        <div class="modal-box">
+            <div class="flex justify-between items-center mb-5">
+                <h3 class="text-lg font-black text-amber-400">✏️ تعديل السكربت</h3>
+                <button onclick="closeModalDirect('editScriptModal')" class="text-gray-500 hover:text-white text-xl leading-none">✕</button>
+            </div>
+            <input type="hidden" id="editScriptId">
+            <label class="block text-xs font-bold text-gray-400 mb-1">عنوان السكربت:</label>
+            <input type="text" id="editScriptTitle" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-white text-sm mb-3 focus:outline-none focus:border-amber-500 text-right">
+            <label class="block text-xs font-bold text-gray-400 mb-1">الكود البرمجي:</label>
+            <textarea id="editScriptCode" rows="5" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-blue-300 text-xs font-mono mb-4 focus:outline-none focus:border-amber-500" style="direction:ltr;"></textarea>
+            <div class="flex gap-2 justify-end">
+                <button onclick="closeModalDirect('editScriptModal')" class="px-4 py-2 rounded-xl bg-slate-800 text-gray-400 hover:text-white text-xs transition">إلغاء</button>
+                <button onclick="saveScriptEdit()" class="px-5 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold text-xs shadow-lg hover:opacity-90 transition">💾 حفظ التعديلات</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== Modal: تعديل التعليق ===== -->
+    <div id="editCommentModal" class="modal-overlay" onclick="closeModal('editCommentModal', event)">
+        <div class="modal-box">
+            <div class="flex justify-between items-center mb-5">
+                <h3 class="text-lg font-black text-amber-400">✏️ تعديل التعليق</h3>
+                <button onclick="closeModalDirect('editCommentModal')" class="text-gray-500 hover:text-white text-xl leading-none">✕</button>
+            </div>
+            <input type="hidden" id="editCommentId">
+            <label class="block text-xs font-bold text-gray-400 mb-1">نص التعليق:</label>
+            <textarea id="editCommentText" rows="4" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-white text-sm mb-4 focus:outline-none focus:border-amber-500 text-right" placeholder="عدّل تعليقك هنا..."></textarea>
+            <div class="flex gap-2 justify-end">
+                <button onclick="closeModalDirect('editCommentModal')" class="px-4 py-2 rounded-xl bg-slate-800 text-gray-400 hover:text-white text-xs transition">إلغاء</button>
+                <button onclick="saveCommentEdit()" class="px-5 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold text-xs shadow-lg hover:opacity-90 transition">💾 حفظ التعديل</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== Modal: تقديم بلاغ ===== -->
+    <div id="reportModal" class="modal-overlay" onclick="closeModal('reportModal', event)">
+        <div class="modal-box" style="max-width:480px;">
+            <div class="flex justify-between items-center mb-5">
+                <h3 class="text-lg font-black text-rose-400">🚩 تقديم بلاغ للإدارة</h3>
+                <button onclick="closeModalDirect('reportModal')" class="text-gray-500 hover:text-white text-xl leading-none">✕</button>
+            </div>
+
+            <!-- جسم الفورم -->
+            <div id="reportFormBody">
+                <div class="flex items-center gap-2 bg-slate-800/60 border border-slate-700 rounded-xl px-3 py-2 mb-4">
+                    <span class="text-xs text-gray-400">نوع البلاغ:</span>
+                    <span id="reportTargetLabel" class="text-xs font-bold text-rose-300"></span>
+                </div>
+                <input type="hidden" id="reportTargetType">
+                <input type="hidden" id="reportTargetId">
+
+                <label class="block text-xs font-bold text-gray-400 mb-1">سبب البلاغ: <span class="text-rose-400">*</span></label>
+                <select id="reportReasonSelect" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-white text-sm mb-3 focus:outline-none focus:border-rose-500">
+                    <option value="">-- اختار سبب البلاغ --</option>
+                    <option value="محتوى مسيء">محتوى مسيء أو مخالف</option>
+                    <option value="سكربت مضر">سكربت خطير أو مضر</option>
+                    <option value="سبام">سبام أو إعلان غير مرغوب</option>
+                    <option value="انتحال شخصية">انتحال شخصية مستخدم آخر</option>
+                    <option value="محتوى مكرر">محتوى مكرر أو مسروق</option>
+                    <option value="أخرى">سبب آخر</option>
+                </select>
+
+                <label class="block text-xs font-bold text-gray-400 mb-1">تفاصيل إضافية (اختياري):</label>
+                <textarea id="reportDetailsText" rows="3" placeholder="اكتب تفاصيل البلاغ هنا..." class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-white text-sm mb-4 focus:outline-none focus:border-rose-500 text-right resize-none"></textarea>
+
+                <p class="text-[11px] text-gray-500 mb-4">📌 البلاغ سيصل مباشرة لإدارة موقع <span class="text-purple-400 font-bold">MR جيمنج</span> للمراجعة والإجراء اللازم.</p>
+
+                <div class="flex gap-2 justify-end">
+                    <button onclick="closeModalDirect('reportModal')" class="px-4 py-2 rounded-xl bg-slate-800 text-gray-400 hover:text-white text-xs transition">إلغاء</button>
+                    <button onclick="submitReport()" class="px-5 py-2 rounded-xl bg-gradient-to-r from-rose-600 to-pink-600 text-white font-bold text-xs shadow-lg hover:opacity-90 transition">🚩 إرسال البلاغ</button>
+                </div>
+            </div>
+
+            <!-- رسالة النجاح بعد الإرسال -->
+            <div id="reportSubmitResult" class="hidden text-center py-4">
+                <div class="text-4xl mb-3">✅</div>
+                <p class="text-green-400 font-bold text-sm mb-1">تم إرسال البلاغ بنجاح!</p>
+                <p class="text-gray-400 text-xs mb-4">وصل بلاغك لإدارة <span class="text-purple-400 font-bold">MR جيمنج</span> وسيتم مراجعته في أقرب وقت.</p>
+                <button onclick="closeModalDirect('reportModal')" class="px-5 py-2 rounded-xl bg-slate-700 text-white text-xs hover:bg-slate-600 transition">حسناً، تم 👍</button>
+            </div>
+        </div>
+    </div>
+    <!-- ===== Modal: تعديل الرد ===== -->
+    <div id="editReplyModal" class="modal-overlay" onclick="closeModal('editReplyModal', event)">
+        <div class="modal-box">
+            <div class="flex justify-between items-center mb-5">
+                <h3 class="text-lg font-black text-amber-400">✏️ تعديل الرد</h3>
+                <button onclick="closeModalDirect('editReplyModal')" class="text-gray-500 hover:text-white text-xl leading-none">✕</button>
+            </div>
+            <input type="hidden" id="editReplyCommentId">
+            <input type="hidden" id="editReplyIdx">
+            <label class="block text-xs font-bold text-gray-400 mb-1">نص الرد:</label>
+            <textarea id="editReplyText" rows="3" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-white text-sm mb-4 focus:outline-none focus:border-amber-500 text-right" placeholder="عدّل ردك هنا..."></textarea>
+            <div class="flex gap-2 justify-end">
+                <button onclick="closeModalDirect('editReplyModal')" class="px-4 py-2 rounded-xl bg-slate-800 text-gray-400 hover:text-white text-xs transition">إلغاء</button>
+                <button onclick="saveReplyEdit()" class="px-5 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold text-xs shadow-lg hover:opacity-90 transition">💾 حفظ التعديل</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== Modal: تأكيد حذف الرد ===== -->
+    <div id="deleteReplyModal" class="modal-overlay" onclick="closeModal('deleteReplyModal', event)">
+        <div class="modal-box" style="max-width:420px;">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-black text-rose-400">🗑️ تأكيد الحذف</h3>
+                <button onclick="closeModalDirect('deleteReplyModal')" class="text-gray-500 hover:text-white text-xl leading-none">✕</button>
+            </div>
+            <div class="bg-rose-950/30 border border-rose-900/50 rounded-xl p-4 mb-5 text-center">
+                <div class="text-3xl mb-2">⚠️</div>
+                <p class="text-gray-200 text-sm font-bold mb-1">هل أنت متأكد من حذف هذا الرد؟</p>
+                <p class="text-gray-500 text-xs">هذا الإجراء لا يمكن التراجع عنه.</p>
+            </div>
+            <input type="hidden" id="deleteReplyCommentId">
+            <input type="hidden" id="deleteReplyIdx">
+            <div class="flex gap-3 justify-end">
+                <button onclick="closeModalDirect('deleteReplyModal')" class="px-5 py-2 rounded-xl bg-slate-800 text-gray-300 hover:text-white text-sm font-bold transition">إلغاء</button>
+                <button onclick="confirmDeleteReply()" class="px-5 py-2 rounded-xl bg-gradient-to-r from-rose-600 to-pink-600 text-white font-bold text-sm shadow-lg hover:opacity-90 transition">🗑️ نعم، احذف الرد</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentUser = null;
+        let selectedReplyCommentId = null;
+
+        // ================= البيانات الافتراضية =================
+        const DEFAULT_SCRIPTS = [
+            { id: 101, title: "سكربت التجميع التلقائي الفائق | Blox Fruits", code: "loadstring(game:HttpGet('https://raw.githubusercontent.com/Example/Main/lua'))()", author: "Legend_Gamer", likes: 45, dislikes: 0, likedByMe: false, dislikedByMe: false, isUser: false },
+            { id: 102, title: "كود ماب الهروب الأسطوري (أوبي الألوان)", code: "Map_Asset_ID: [ROBLOX-9921044521-COLOR]", author: "Dev_Ahmed", likes: 21, dislikes: 0, likedByMe: false, dislikedByMe: false, isUser: false }
+        ];
+        const DEFAULT_COMMENTS = [
+            { id: 201, author: "أحمد السوري", text: "الموقع ممتاز جداً ومفهوم! شكراً لكم.", likes: 14, dislikes: 0, likedByMe: false, dislikedByMe: false, isUser: false, replies: [] },
+            { id: 202, author: "جيمر محترف", text: "أتمنى من الجميع مشاركة السكربتات الشغالة هنا ليستفيد الكل.", likes: 8, dislikes: 0, likedByMe: false, dislikedByMe: false, isUser: false, replies: [
+                { author: "Dev_Ahmed", text: "قريباً سأرفع لكم كود حماية المابات بالكامل هنا.", isUser: false }
+            ]}
+        ];
+
+        // ================= localStorage helpers =================
+        function saveData() {
+            localStorage.setItem('mrg_scripts',  JSON.stringify(scriptsArray));
+            localStorage.setItem('mrg_comments', JSON.stringify(commentsArray));
+            localStorage.setItem('mrg_reports',  JSON.stringify(adminReports));
+        }
+
+        function loadData() {
+            try {
+                const s = localStorage.getItem('mrg_scripts');
+                const c = localStorage.getItem('mrg_comments');
+                const r = localStorage.getItem('mrg_reports');
+                scriptsArray  = s ? JSON.parse(s) : DEFAULT_SCRIPTS;
+                commentsArray = c ? JSON.parse(c) : DEFAULT_COMMENTS;
+                adminReports  = r ? JSON.parse(r) : [];
+            } catch(e) {
+                scriptsArray  = DEFAULT_SCRIPTS;
+                commentsArray = DEFAULT_COMMENTS;
+                adminReports  = [];
+            }
+        }
+
+        function loadUser() {
+            try {
+                const u = localStorage.getItem('mrg_user');
+                if(u) {
+                    currentUser = JSON.parse(u);
+                    applyLoggedInUI();
+                }
+            } catch(e) {}
+        }
+
+        // ================= تحميل البيانات =================
+        let scriptsArray  = [];
+        let commentsArray = [];
+        let adminReports  = [];
+
+        window.onload = function() {
+            loadData();
+            loadUser();
+            renderScripts();
+            renderComments();
+        };
+
+        function applyLoggedInUI() {
+            document.getElementById('auth-zone').innerHTML = `
+                <div class="flex items-center gap-2 bg-purple-950/60 border border-purple-800 px-3 py-1.5 rounded-xl text-xs">
+                    <span class="font-bold text-purple-300">👤 ${currentUser.name}</span>
+                    <button onclick="logoutUser()" class="text-rose-400 underline mr-1">خروج</button>
+                </div>
+            `;
+            document.getElementById('comment-auth-warning').innerHTML = "✅ تم تسجيل الدخول بنجاح. يمكنك الآن النشر، التعديل، الحذف، الرد والإعجاب.";
+            document.getElementById('comment-auth-warning').className = "text-xs text-green-400";
+            const submitBtn = document.getElementById('submitCommentBtn');
+            submitBtn.removeAttribute('disabled');
+            submitBtn.className = "bg-purple-600 hover:bg-purple-500 text-white font-bold px-5 py-2 rounded-lg text-xs cursor-pointer transition";
+            document.getElementById('btn-admin-reports').classList.remove('hidden');
+            renderScripts();
+            renderComments();
+        }
+
+        function mockGoogleLogin() {
+            currentUser = { name: "جيمر_مطور (أنت)" };
+            localStorage.setItem('mrg_user', JSON.stringify(currentUser));
+            applyLoggedInUI();
+        }
+
+        function logoutUser() {
+            localStorage.removeItem('mrg_user');
+            location.reload();
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('bg-purple-600', 'text-white'));
+            document.getElementById('btn-' + tabId).classList.add('bg-purple-600', 'text-white');
+            // تحديث لوحة البلاغات تلقائياً عند فتحها
+            if(tabId === 'admin-reports') renderAdminReports();
+        }
+
+        // ================= تظبيط كلمات السيو المطور (أفكار ملائمة للموضوع) =================
+        function generateAdvancedTags() {
+            const keyword = document.getElementById('keywordInput').value.trim();
+            if(!keyword) { showToast('⚠️ اكتب الكلمة المفتاحية أولاً!'); return; }
+            
+            const resultDiv = document.getElementById('tagsResult');
+            resultDiv.classList.remove('hidden');
+            
+            // ===== تحليل ذكي للكلمة المفتاحية =====
+            const len = keyword.length;
+            const words = keyword.trim().split(/\s+/).length;
+            const hasYear = /202[3-9]|203\d/.test(keyword);
+            const isLongTail = words >= 3;
+            const isTooShort = len < 4;
+            const hasArabic = /[\u0600-\u06FF]/.test(keyword);
+            const hasGame = /سكربت|كود|ماب|لعبة|بلوكس|رولبوكس|فري فاير|ببجي|ماين كرافت|فورت نايت/i.test(keyword);
+
+            // حساب نقاط السيو
+            let score = 40;
+            let tips = [];
+            if(!isTooShort) score += 10;
+            if(words >= 2) { score += 10; } else { tips.push('⚡ أضف كلمة ثانية لتقوية الاستهداف'); }
+            if(isLongTail) { score += 15; } else { tips.push('📌 الكلمات الطويلة (Long Tail) تحصل على 3x مشاهدات'); }
+            if(hasGame)   { score += 15; } else { tips.push('🎮 دمج اسم لعبة مشهورة يرفع الكليكات'); }
+            if(hasYear)   { score += 10; } else { tips.push('📅 إضافة السنة ترفع الـ CTR بنسبة 40%'); }
+            if(hasArabic) score += 5;
+            if(score > 100) score = 100;
+
+            // لون العداد حسب النقاط
+            let barColor = score >= 75 ? '#10b981' : score >= 50 ? '#f59e0b' : '#ef4444';
+            let scoreLabel = score >= 75 ? '💪 قوي جداً' : score >= 50 ? '🔶 متوسط' : '🔴 ضعيف — يحتاج تحسين';
+
+            // النصيحة الذكية بحسب نوع الكلمة
+            let verdict = "";
+            if(keyword.includes("سكربت") || keyword.includes("كود")) {
+                verdict = `💡 <b>فكرة للموضوع:</b> ابدأ فيديو الشرح بلقطة أسلوب لعب سريعة تظهر النتيجة النهائية للكود مباشرة، ثم اطلب من المتابعين نسخ الكود من موقعك <b>MR جيمنج</b> لرفع ريتش المشاهدات والتفاعل.`;
+            } else if(keyword.includes("ماب") || keyword.includes("برمجة")) {
+                verdict = `💡 <b>فكرة للموضوع:</b> ننصحك بصناعة مقطع يعتمد على فكرة 'صنعت ماباً بناءً على طلبات المتابعين وصدمتني النتيجة!'؛ هذا يرفع معدل التعليقات لـ 3 أضعاف النسبة العادية.`;
+            } else {
+                verdict = `💡 <b>فكرة للموضوع:</b> يفضل دمج عنوان السنة الحالية مع وسم المقارنات أو التحديات المباشرة لضمان تفادي خروج المشاهد في أول 10 ثوانٍ من المقطع.`;
+            }
+
+            // عرض نتيجة التحليل الأولية
+            document.getElementById('seoVerdict').innerHTML = `
+                <div class="mb-3">
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="font-bold text-pink-300 text-xs">📊 قوة الكلمة المفتاحية: <span style="color:${barColor}">${score}/100 — ${scoreLabel}</span></span>
+                    </div>
+                    <div class="seo-bar-track">
+                        <div class="seo-bar-fill" style="width:${score}%;background:${barColor};"></div>
+                    </div>
+                </div>
+                ${tips.length > 0 ? `<div class="mt-2 space-y-1">${tips.map(t=>`<p class="text-[11px] text-yellow-300">${t}</p>`).join('')}</div>` : '<p class="text-[11px] text-green-400">✅ الكلمة المفتاحية مثالية للسيو!</p>'}
+                <hr class="border-pink-900/40 my-2">
+                <div class="text-[11px] text-gray-300">${verdict}</div>
+                <div id="aiTagsLoading" class="mt-2 text-[11px] text-purple-400 flex items-center gap-1"><span class="animate-spin">⏳</span> الذكاء الاصطناعي يولد التاجات...</div>
+            `;
+
+            // توليد التاجات الأساسية فوراً
+            const list = document.getElementById('tagsList');
+            list.innerHTML = "";
+            const currentYear = new Date().getFullYear();
+            const baseTags = [
+                keyword,
+                `${keyword} ${currentYear}`,
+                `أسرار ${keyword}`,
+                `كيفية تشغيل ${keyword}`,
+                `احتراف ${keyword}`,
+                `أفضل ${keyword}`,
+                `شرح ${keyword} بالتفصيل`,
+                `#MR_Gaming`,
+                `#رولبوكس_عربي`,
+                `#سكربتات_الجيمرز`
+            ];
+            baseTags.forEach(t => {
+                const s = document.createElement('span');
+                const isHashtag = t.startsWith('#');
+                s.className = `bg-slate-800 px-2 py-0.5 rounded border text-[11px] cursor-pointer hover:opacity-80 transition ${isHashtag ? 'text-purple-300 border-purple-800' : 'text-pink-300 border-slate-700'}`;
+                s.innerText = t;
+                s.title = "اضغط لنسخ هذا التاج";
+                s.onclick = () => { navigator.clipboard.writeText(t); showToast(`📋 تم نسخ: ${t}`); };
+                list.appendChild(s);
+            });
+
+            // طلب تاجات ذكية إضافية من الذكاء الاصطناعي
+            const aiPrompt = `أنت خبير سيو يوتيوب للمحتوى العربي للجيمرز. للكلمة المفتاحية: "${keyword}"
+أعطني 15 هاشتاج وكلمة مفتاحية يوتيوب ذكية وفعّالة للمحتوى العربي.
+الرد يكون فقط كالآتي — كل كلمة/هاشتاج في سطر مستقل، بدون أرقام أو شرح:`;
+
+            fetch("https://api.anthropic.com/v1/messages", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    model: "claude-sonnet-4-6",
+                    max_tokens: 400,
+                    messages: [{ role: "user", content: aiPrompt }]
+                })
+            })
+            .then(r => r.json())
+            .then(data => {
+                const text = data.content?.map(i => i.text || "").join("") || "";
+                const aiTags = text.split("\n").map(t => t.trim()).filter(t => t.length > 1 && t.length < 60);
+                document.getElementById('aiTagsLoading')?.remove();
+                aiTags.forEach(t => {
+                    const s = document.createElement('span');
+                    const isHashtag = t.startsWith('#');
+                    s.className = `bg-purple-950/40 px-2 py-0.5 rounded border text-[11px] cursor-pointer hover:opacity-80 transition ${isHashtag ? 'text-purple-300 border-purple-700' : 'text-pink-300 border-pink-900/50'}`;
+                    s.innerText = t;
+                    s.title = "اضغط لنسخ هذا التاج";
+                    s.onclick = () => { navigator.clipboard.writeText(t); showToast(`📋 تم نسخ: ${t}`); };
+                    list.appendChild(s);
+                });
+            })
+            .catch(() => {
+                document.getElementById('aiTagsLoading')?.remove();
+            });
+        }
+
+        function copyAllTags() {
+            const kw = document.getElementById('keywordInput').value || "العاب";
+            navigator.clipboard.writeText(`${kw}, اسرار ${kw}, كيفية تشغيل ${kw}, احتراف ${kw}`);
+            showToast('📋 تم نسخ الكلمات المفتاحية بالكامل!');
+        }
+
+        // ================= إدارة السكربتات (عرض، لايك، تعديل، حذف، ريبورت) =================
+        function renderScripts() {
+            const container = document.getElementById('publicScriptsContainer');
+            container.innerHTML = "";
+            scriptsArray.forEach(s => {
+                const isAuthor = currentUser && s.isUser;
+                const likedClass   = s.likedByMe    ? 'liked'    : '';
+                const dislikedClass = s.dislikedByMe ? 'disliked' : '';
+                const div = document.createElement('div');
+                div.className = "script-card p-4 bg-slate-900/90 rounded-xl border border-slate-800 space-y-2";
+                div.innerHTML = `
+                    <div class="flex justify-between items-center">
+                        <h4 class="font-bold text-white text-sm">${s.title}</h4>
+                        <span class="text-[11px] text-gray-500">بواسطة: ${s.author}</span>
+                    </div>
+                    <pre class="bg-slate-950 p-2.5 rounded text-xs font-mono text-blue-300 text-left overflow-x-auto max-h-24" style="direction: ltr;">${s.code}</pre>
+                    <div class="flex justify-between items-center text-xs pt-1">
+                        <div class="flex items-center gap-2">
+                            <button onclick="likeScript(${s.id})" class="btn-like ${likedClass} bg-blue-950 text-blue-400 border border-blue-900/60 px-2.5 py-1 rounded-lg hover:bg-blue-900/50 transition flex items-center gap-1">👍 <span>${s.likes}</span></button>
+                            <button onclick="dislikeScript(${s.id})" class="btn-dislike ${dislikedClass} bg-slate-800 text-gray-400 border border-slate-700 px-2.5 py-1 rounded-lg hover:bg-slate-700 transition flex items-center gap-1">👎 <span>${s.dislikes||0}</span></button>
+                            <button onclick="copyDirectCode(this)" class="bg-slate-800 text-gray-300 px-2.5 py-1 rounded-lg hover:bg-slate-700">نسخ 📋</button>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            ${isAuthor ? `
+                                <button onclick="editScript(${s.id})" class="text-amber-400 underline hover:text-amber-300">تعديل</button>
+                                <button onclick="deleteScript(${s.id})" class="text-rose-400 underline hover:text-rose-300 mr-2">حذف</button>
+                            ` : `
+                                <button onclick="reportAction('سكربت', ${s.id})" class="text-gray-500 hover:text-rose-400 transition">🚩 إبلاغ</button>
+                            `}
+                        </div>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function publishUserScript() {
+            const title = document.getElementById('scriptTitleInput').value.trim();
+            const code = document.getElementById('scriptCodeInput').value.trim();
+            if(!title || !code) { showToast('⚠️ اكتب عنوان الكود والسكربت أولاً!'); return; }
+            
+            const name = currentUser ? currentUser.name : "زائر مجهول";
+            scriptsArray.unshift({ id: Date.now(), title, code, author: name, likes: 0, dislikes: 0, likedByMe: false, dislikedByMe: false, isUser: !!currentUser });
+            
+            document.getElementById('scriptTitleInput').value = "";
+            document.getElementById('scriptCodeInput').value = "";
+            saveData();
+            showToast('✅ تم نشر الكود بنجاح في المكتبة!');
+            renderScripts();
+            switchTab('scripts-explore');
+        }
+
+        function likeScript(id) {
+            if(!currentUser) { showToast('⚠️ يجب تسجيل الدخول للإعجاب بالأكواد!'); return; }
+            const script = scriptsArray.find(s => s.id === id);
+            if(!script) return;
+            if(script.likedByMe) {
+                script.likedByMe = false;
+                script.likes = Math.max(0, script.likes - 1);
+                showToast('تم إلغاء الإعجاب');
+            } else {
+                script.likedByMe = true;
+                script.likes++;
+                if(script.dislikedByMe) { script.dislikedByMe = false; script.dislikes = Math.max(0, (script.dislikes||0) - 1); }
+                showToast('👍 تم الإعجاب!');
+            }
+            saveData();
+            renderScripts();
+        }
+
+        function dislikeScript(id) {
+            if(!currentUser) { showToast('⚠️ يجب تسجيل الدخول أولاً!'); return; }
+            const script = scriptsArray.find(s => s.id === id);
+            if(!script) return;
+            if(script.dislikedByMe) {
+                script.dislikedByMe = false;
+                script.dislikes = Math.max(0, (script.dislikes||0) - 1);
+                showToast('تم إلغاء عدم الإعجاب');
+            } else {
+                script.dislikedByMe = true;
+                script.dislikes = (script.dislikes||0) + 1;
+                if(script.likedByMe) { script.likedByMe = false; script.likes = Math.max(0, script.likes - 1); }
+                showToast('👎 تم تسجيل عدم الإعجاب');
+            }
+            saveData();
+            renderScripts();
+        }
+
+        function editScript(id) {
+            const script = scriptsArray.find(s => s.id === id);
+            if(!script) return;
+            document.getElementById('editScriptId').value = id;
+            document.getElementById('editScriptTitle').value = script.title;
+            document.getElementById('editScriptCode').value = script.code;
+            document.getElementById('editScriptModal').classList.add('open');
+        }
+
+        function saveScriptEdit() {
+            const id = parseInt(document.getElementById('editScriptId').value);
+            const newTitle = document.getElementById('editScriptTitle').value.trim();
+            const newCode = document.getElementById('editScriptCode').value.trim();
+            if(!newTitle || !newCode) { showToast('⚠️ يجب ملء الحقول كلها!'); return; }
+            const script = scriptsArray.find(s => s.id === id);
+            if(script) { script.title = newTitle; script.code = newCode; }
+            closeModalDirect('editScriptModal');
+            saveData();
+            renderScripts();
+            showToast('✅ تم حفظ تعديلات السكربت!');
+        }
+
+        function deleteScript(id) {
+            if(confirm("هل تريد حذف هذا السكربت؟")) {
+                scriptsArray = scriptsArray.filter(s => s.id !== id);
+                saveData();
+                renderScripts();
+                showToast('🗑️ تم حذف السكربت.');
+            }
+        }
+
+        // ================= إدارة التعليقات والردود واللايكات والتحكم =================
+        function renderComments() {
+            const container = document.getElementById('commentsContainer');
+            container.innerHTML = "";
+            
+            commentsArray.forEach(c => {
+                const isAuthor = currentUser && c.isUser;
+                const likedClass    = c.likedByMe    ? 'liked'    : '';
+                const dislikedClass = c.dislikedByMe ? 'disliked' : '';
+                const div = document.createElement('div');
+                div.className = "p-4 bg-slate-900/50 rounded-xl border border-slate-800/60 space-y-3";
+                
+                let repliesHtml = "";
+                if(c.replies && c.replies.length > 0) {
+                    repliesHtml = `<div class="mt-3 mr-6 pl-2 border-r-2 border-purple-600/40 space-y-2 bg-slate-950/40 p-2.5 rounded-lg">`;
+                    c.replies.forEach((r, rIdx) => {
+                        const isReplyAuthor = currentUser && r.isUser;
+                        repliesHtml += `
+                            <div class="text-xs flex items-start justify-between gap-2">
+                                <div class="flex-1">
+                                    <span class="font-bold text-purple-400 block">↩️ ${r.author}:</span>
+                                    <p class="text-gray-300 mt-0.5">${r.text}</p>
+                                </div>
+                                ${isReplyAuthor ? `
+                                <div class="flex gap-2 shrink-0 mt-0.5">
+                                    <button onclick="editReply(${c.id}, ${rIdx})" class="text-amber-400 hover:underline text-[10px]">تعديل</button>
+                                    <button onclick="deleteReply(${c.id}, ${rIdx})" class="text-rose-400 hover:underline text-[10px]">حذف</button>
+                                </div>` : ''}
+                            </div>
+                        `;
+                    });
+                    repliesHtml += `</div>`;
+                }
+
+                div.innerHTML = `
+                    <div class="flex gap-3">
+                        <div class="w-9 h-9 rounded-full bg-purple-600 flex items-center justify-center text-sm font-bold text-white">${c.author[0]}</div>
+                        <div class="flex-1">
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="text-xs font-bold text-purple-300">${c.author}</span>
+                                <span class="text-[10px] text-gray-500">نشط</span>
+                            </div>
+                            <p class="text-gray-200 text-xs leading-relaxed">${c.text}</p>
+                            
+                            <div class="flex justify-between items-center text-[11px] mt-3 pt-2 border-t border-slate-800/40">
+                                <div class="flex items-center gap-2">
+                                    <button onclick="likeComment(${c.id})" class="btn-like ${likedClass} flex items-center gap-1 border border-transparent px-2 py-0.5 rounded-lg text-gray-400 hover:text-purple-400 transition">👍 <span>${c.likes}</span></button>
+                                    <button onclick="dislikeComment(${c.id})" class="btn-dislike ${dislikedClass} flex items-center gap-1 border border-transparent px-2 py-0.5 rounded-lg text-gray-400 hover:text-red-400 transition">👎 <span>${c.dislikes||0}</span></button>
+                                    <button onclick="setReplyMode(${c.id}, '${c.author}')" class="text-purple-400 hover:underline">💬 رد على ${c.author}</button>
+                                </div>
+                                <div class="flex gap-2">
+                                    ${isAuthor ? `
+                                        <button onclick="editComment(${c.id})" class="text-amber-400 hover:underline">تعديل</button>
+                                        <button onclick="deleteComment(${c.id})" class="text-rose-400 hover:underline">حذف</button>
+                                    ` : `
+                                        <button onclick="reportAction('تعليق', ${c.id})" class="text-gray-500 hover:text-rose-400">🚩 إبلاغ</button>
+                                    `}
+                                </div>
+                            </div>
+                            ${repliesHtml}
+                        </div>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function submitCommentAction() {
+            const text = document.getElementById('commentTextInput').value.trim();
+            if(!text) return;
+            
+            if(selectedReplyCommentId !== null) {
+                const parentComment = commentsArray.find(c => c.id === selectedReplyCommentId);
+                if(parentComment) {
+                    parentComment.replies.push({ author: currentUser.name, text: text, isUser: true });
+                    saveData();
+                    showToast('✅ تم إرسال الرد بنجاح!');
+                }
+                cancelReplyMode();
+            } else {
+                commentsArray.unshift({
+                    id: Date.now(), author: currentUser.name, text: text, likes: 0, dislikes: 0,
+                    likedByMe: false, dislikedByMe: false, isUser: true, replies: []
+                });
+                saveData();
+                showToast('✅ تم إضافة تعليقك!');
+            }
+            
+            document.getElementById('commentTextInput').value = "";
+            renderComments();
+        }
+
+        function setReplyMode(commentId, authorName) {
+            if(!currentUser) { alert('يجب تسجيل الدخول أولاً لتتمكن من الرد!'); return; }
+            selectedReplyCommentId = commentId;
+            document.getElementById('replyingNotice').classList.remove('hidden');
+            document.getElementById('replyingText').innerText = `أنت الآن تقوم بالرد على تعليق: (${authorName})`;
+            document.getElementById('commentTextInput').placeholder = `اكتب ردك الموجه لـ ${authorName} هنا...`;
+            document.getElementById('commentTextInput').focus();
+        }
+
+        function cancelReplyMode() {
+            selectedReplyCommentId = null;
+            document.getElementById('replyingNotice').classList.add('hidden');
+            document.getElementById('commentTextInput').placeholder = "اكتب كلامك هنا ودردش معنا...";
+        }
+
+        function likeComment(id) {
+            if(!currentUser) { showToast('⚠️ يجب تسجيل الدخول للإعجاب بالتعليقات!'); return; }
+            const comment = commentsArray.find(c => c.id === id);
+            if(!comment) return;
+            if(comment.likedByMe) {
+                comment.likedByMe = false;
+                comment.likes = Math.max(0, comment.likes - 1);
+                showToast('تم إلغاء الإعجاب');
+            } else {
+                comment.likedByMe = true;
+                comment.likes++;
+                if(comment.dislikedByMe) { comment.dislikedByMe = false; comment.dislikes = Math.max(0, (comment.dislikes||0) - 1); }
+                showToast('👍 تم الإعجاب!');
+            }
+            saveData();
+            renderComments();
+        }
+
+        function dislikeComment(id) {
+            if(!currentUser) { showToast('⚠️ يجب تسجيل الدخول أولاً!'); return; }
+            const comment = commentsArray.find(c => c.id === id);
+            if(!comment) return;
+            if(comment.dislikedByMe) {
+                comment.dislikedByMe = false;
+                comment.dislikes = Math.max(0, (comment.dislikes||0) - 1);
+                showToast('تم إلغاء عدم الإعجاب');
+            } else {
+                comment.dislikedByMe = true;
+                comment.dislikes = (comment.dislikes||0) + 1;
+                if(comment.likedByMe) { comment.likedByMe = false; comment.likes = Math.max(0, comment.likes - 1); }
+                showToast('👎 تم تسجيل عدم الإعجاب');
+            }
+            saveData();
+            renderComments();
+        }
+
+        function editComment(id) {
+            const comment = commentsArray.find(c => c.id === id);
+            if(!comment) return;
+            document.getElementById('editCommentId').value = id;
+            document.getElementById('editCommentText').value = comment.text;
+            document.getElementById('editCommentModal').classList.add('open');
+        }
+
+        function saveCommentEdit() {
+            const id = parseInt(document.getElementById('editCommentId').value);
+            const newText = document.getElementById('editCommentText').value.trim();
+            if(!newText) { showToast('⚠️ لا يمكن حفظ تعليق فارغ!'); return; }
+            const comment = commentsArray.find(c => c.id === id);
+            if(comment) { comment.text = newText; }
+            closeModalDirect('editCommentModal');
+            saveData();
+            renderComments();
+            showToast('✅ تم تعديل تعليقك بنجاح!');
+        }
+
+        function deleteComment(id) {
+            if(confirm("هل تريد حذف هذا التعليق؟")) {
+                commentsArray = commentsArray.filter(c => c.id !== id);
+                saveData();
+                renderComments();
+                showToast('🗑️ تم حذف التعليق.');
+            }
+        }
+
+        function editReply(commentId, replyIdx) {
+            const comment = commentsArray.find(c => c.id === commentId);
+            if(!comment || !comment.replies[replyIdx]) return;
+            document.getElementById('editReplyCommentId').value = commentId;
+            document.getElementById('editReplyIdx').value = replyIdx;
+            document.getElementById('editReplyText').value = comment.replies[replyIdx].text;
+            document.getElementById('editReplyModal').classList.add('open');
+        }
+
+        function saveReplyEdit() {
+            const commentId = parseInt(document.getElementById('editReplyCommentId').value);
+            const replyIdx  = parseInt(document.getElementById('editReplyIdx').value);
+            const newText   = document.getElementById('editReplyText').value.trim();
+            if(!newText) { showToast('⚠️ لا يمكن حفظ رد فارغ!'); return; }
+            const comment = commentsArray.find(c => c.id === commentId);
+            if(comment && comment.replies[replyIdx]) {
+                comment.replies[replyIdx].text = newText;
+            }
+            closeModalDirect('editReplyModal');
+            saveData();
+            renderComments();
+            showToast('✅ تم تعديل ردك بنجاح!');
+        }
+
+        function deleteReply(commentId, replyIdx) {
+            document.getElementById('deleteReplyCommentId').value = commentId;
+            document.getElementById('deleteReplyIdx').value = replyIdx;
+            document.getElementById('deleteReplyModal').classList.add('open');
+        }
+
+        function confirmDeleteReply() {
+            const commentId = parseInt(document.getElementById('deleteReplyCommentId').value);
+            const replyIdx  = parseInt(document.getElementById('deleteReplyIdx').value);
+            const comment = commentsArray.find(c => c.id === commentId);
+            if(comment) comment.replies.splice(replyIdx, 1);
+            closeModalDirect('deleteReplyModal');
+            saveData();
+            renderComments();
+            showToast('🗑️ تم حذف الرد.');
+        }
+
+        function reportAction(type, targetId) {
+            // حفظ بيانات البلاغ في الـ modal
+            document.getElementById('reportTargetType').value = type;
+            document.getElementById('reportTargetId').value = targetId || '';
+            document.getElementById('reportTargetLabel').textContent = type === 'سكربت' ? '🔵 سكربت برمجي' : '💬 تعليق';
+            // إعادة تعيين الفورم
+            document.getElementById('reportReasonSelect').value = '';
+            document.getElementById('reportDetailsText').value = '';
+            document.getElementById('reportSubmitResult').classList.add('hidden');
+            document.getElementById('reportFormBody').classList.remove('hidden');
+            document.getElementById('reportModal').classList.add('open');
+        }
+
+        function submitReport() {
+            const type    = document.getElementById('reportTargetType').value;
+            const targetId = document.getElementById('reportTargetId').value;
+            const reason  = document.getElementById('reportReasonSelect').value;
+            const details = document.getElementById('reportDetailsText').value.trim();
+            if(!reason) { showToast('⚠️ اختار سبب البلاغ أولاً!'); return; }
+
+            // تجميع البلاغ وحفظه في مصفوفة الإدارة
+            const report = {
+                id: Date.now(),
+                type, targetId,
+                reason, details,
+                reporter: currentUser ? currentUser.name : 'زائر مجهول',
+                time: new Date().toLocaleString('ar-EG')
+            };
+            adminReports.push(report);
+            saveData();
+
+            // إخفاء الفورم وعرض رسالة النجاح
+            document.getElementById('reportFormBody').classList.add('hidden');
+            document.getElementById('reportSubmitResult').classList.remove('hidden');
+        }
+
+        function copyDirectCode(btn) {
+            // البحث عن أقرب عنصر pre داخل نفس البطاقة
+            const card = btn.closest('.script-card');
+            const preEl = card ? card.querySelector('pre') : null;
+            const text = preEl ? preEl.textContent : '';
+            if(!text) { showToast('⚠️ مفيش كود للنسخ!'); return; }
+            navigator.clipboard.writeText(text).then(() => {
+                showToast('📋 تم نسخ الكود البرمجي بنجاح!');
+            }).catch(() => {
+                // fallback للمتصفحات القديمة
+                const ta = document.createElement('textarea');
+                ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+                document.body.appendChild(ta); ta.select();
+                document.execCommand('copy');
+                document.body.removeChild(ta);
+                showToast('📋 تم نسخ الكود البرمجي بنجاح!');
+            });
+        }
+
+        function generateAdvancedIdea() {
+            const genre = document.getElementById('gameGenre').value;
+            const resultDiv = document.getElementById('ideaResult');
+            resultDiv.classList.remove('hidden');
+            resultDiv.innerHTML = `<div class="flex items-center gap-2 text-purple-400"><span class="animate-spin text-lg">⏳</span> <span>جاري توليد الأفكار بالذكاء الاصطناعي...</span></div>`;
+
+            const genreLabels = {
+                roblox_dev: "تطوير وتصميم مابات الألعاب",
+                roblox_script: "مراجعة وتجربة السكربتات المساعدة",
+                freefire: "فري فاير",
+                pubg: "ببجي",
+                minecraft: "ماين كرافت",
+                fortnite: "فورت نايت"
+            };
+            const genreLabel = genreLabels[genre] || genre;
+
+            const prompt = `أنت خبير محتوى يوتيوب للجيمرز العرب. اقترح 25 فكرة فيديو إبداعية ومتنوعة لقناة جيمينج تخص: "${genreLabel}".
+
+كل فكرة تكون في سطر واحد بهذا الشكل:
+[رقم]. [إيموجي] [عنوان جذاب للفيديو] — [جملة واحدة تشرح الأسلوب أو الهوك]
+
+يجب أن تكون الأفكار متنوعة وتشمل: تحديات، مقارنات، تجارب، تريندات، ويزدار، قصص، عروض مباشرة، مقالب، تعاونات، راندم.
+الرد بالعربي فقط.`;
+
+            fetch("https://api.anthropic.com/v1/messages", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    model: "claude-sonnet-4-6",
+                    max_tokens: 1500,
+                    messages: [{ role: "user", content: prompt }]
+                })
+            })
+            .then(r => r.json())
+            .then(data => {
+                const text = data.content?.map(i => i.text || "").join("") || "⚠️ تعذّر التوليد، حاول مرة أخرى.";
+                const lines = text.split("\n").filter(l => l.trim());
+                let html = `<div class="mb-3 flex items-center gap-2"><span class="text-purple-400 font-bold text-xs">🎯 ${lines.length} فكرة مقترحة لـ "${genreLabel}"</span></div>`;
+                html += `<div class="space-y-1.5">`;
+                lines.forEach(line => {
+                    if(!line.trim()) return;
+                    html += `<div class="bg-slate-900/70 border border-slate-700/60 rounded-lg px-3 py-2 text-[11.5px] text-gray-200 leading-relaxed hover:border-purple-700/50 transition cursor-default">${line}</div>`;
+                });
+                html += `</div>`;
+                html += `<button onclick="generateAdvancedIdea()" class="mt-3 w-full bg-slate-800 hover:bg-slate-700 text-purple-300 text-xs py-2 rounded-lg border border-slate-700 transition">🔄 توليد أفكار جديدة</button>`;
+                resultDiv.innerHTML = html;
+            })
+            .catch(() => {
+                resultDiv.innerHTML = `<p class="text-rose-400 text-xs">⚠️ حدث خطأ في الاتصال، تحقق من الإنترنت وحاول مجدداً.</p>`;
+            });
+        }
+
+        // ================= لوحة البلاغات الواردة لصاحب الموقع =================
+        function renderAdminReports() {
+            const container = document.getElementById('adminReportsContainer');
+            if(!container) return;
+            container.innerHTML = "";
+            if(adminReports.length === 0) {
+                container.innerHTML = `<p class="text-gray-500 text-sm text-center py-8">لا توجد بلاغات واردة حتى الآن.</p>`;
+                return;
+            }
+            adminReports.slice().reverse().forEach(r => {
+                const typeColor = r.type === 'سكربت' ? 'text-blue-400' : 'text-purple-400';
+                const div = document.createElement('div');
+                div.className = "p-4 bg-slate-900/80 rounded-xl border border-rose-900/40 space-y-2";
+                div.innerHTML = `
+                    <div class="flex justify-between items-center">
+                        <div class="flex items-center gap-2">
+                            <span class="text-rose-400 font-bold text-xs">🚩 بلاغ جديد</span>
+                            <span class="text-[11px] ${typeColor} bg-slate-800 px-2 py-0.5 rounded">${r.type}</span>
+                            ${r.targetId ? `<span class="text-[10px] text-gray-600">ID: ${r.targetId}</span>` : ''}
+                        </div>
+                        <span class="text-[10px] text-gray-500">${r.time}</span>
+                    </div>
+                    <div class="flex flex-wrap gap-x-4 gap-y-1 text-xs">
+                        <span><span class="text-gray-500">المُبلِّغ:</span> <span class="text-gray-300">${r.reporter}</span></span>
+                        <span><span class="text-gray-500">السبب:</span> <span class="text-rose-300 font-bold">${r.reason}</span></span>
+                    </div>
+                    ${r.details ? `<p class="text-[11px] text-gray-400 bg-slate-950/60 p-2 rounded-lg">"${r.details}"</p>` : ''}
+                    <div class="flex gap-2 pt-1">
+                        <button onclick="resolveReport(${r.id}, 'تم تنفيذ الإجراء')" class="text-[11px] bg-green-950/50 text-green-400 border border-green-900/40 px-3 py-1 rounded-lg hover:bg-green-900/30 transition">✅ تم الإجراء</button>
+                        <button onclick="resolveReport(${r.id}, 'تم الرفض')" class="text-[11px] bg-slate-800 text-gray-400 border border-slate-700 px-3 py-1 rounded-lg hover:bg-slate-700 transition">❌ رفض البلاغ</button>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function resolveReport(reportId, action) {
+            adminReports = adminReports.filter(r => r.id !== reportId);
+            saveData();
+            renderAdminReports();
+            showToast(`✅ ${action} بنجاح!`);
+        }
+
+        // ===== Toast Helper =====
+        let toastTimer = null;
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.classList.add('show');
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
+        }
+
+        // ===== Modal Helpers =====
+        function closeModal(modalId, event) {
+            // إغلاق بالضغط خارج الصندوق فقط
+            if(event.target.id === modalId) closeModalDirect(modalId);
+        }
+        function closeModalDirect(modalId) {
+            document.getElementById(modalId).classList.remove('open');
+        }
+        // إغلاق بمفتاح ESC
+        document.addEventListener('keydown', e => {
+            if(e.key === 'Escape') {
+                document.querySelectorAll('.modal-overlay.open').forEach(m => m.classList.remove('open'));
+            }
+        });
+    </script>
+</body>
+</html>
