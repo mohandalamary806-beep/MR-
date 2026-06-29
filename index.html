@@ -1101,15 +1101,14 @@
             showToast('📋 تم نسخ الكلمات المفتاحية بالكامل!');
         }
 
-function generateAdvancedIdea() {
-    const genre = document.getElementById('gameGenre').value;
-    const resultDiv = document.getElementById('ideaResult');
-    resultDiv.classList.remove('hidden');
-    resultDiv.innerHTML = `<div class="flex items-center gap-2 text-purple-400"><span class="animate-spin text-lg">⏳</span> <span>جاري توليد الأفكار...</span></div>`;
-
-    // القائمة المحدثة للألعاب
-    const genreLabels = {
-        roblox_adoptme: "Adopt Me!",
+   function generateAdvancedIdea() {
+            const genre = document.getElementById('gameGenre').value;
+            const resultDiv = document.getElementById('ideaResult');
+            resultDiv.classList.remove('hidden');
+            resultDiv.innerHTML = `<div class="flex items-center gap-2 text-purple-400"><span class="animate-spin text-lg">⏳</span> <span>جاري توليد الأفكار بالذكاء الاصطناعي...</span></div>`;
+ 
+            const genreLabels = {
+          roblox_adoptme: "Adopt Me!",
         roblox_brookhaven: "Brookhaven",
         roblox_bloxfruits: "Blox Fruits",
         roblox_pet99: "Pet Simulator 99",
@@ -1129,10 +1128,8 @@ function generateAdvancedIdea() {
         subway: "Subway Surfers",
         temple: "Temple Run 2",
         fc24: "EA Sports FC 24"
-    };
-
-    // مصفوفة الأفكار الموسعة (يمكنك إضافة المزيد هنا)
-    const allIdeas = [
+            };
+       const allIdeas = [
         `تحدي الـ 24 ساعة في ${genreLabels[genre]} بدون مساعدة`,
         `أسرار وخدع في ${genreLabels[genre]} لا يعرفها أحد`,
         `كيف تصبح محترفاً في ${genreLabels[genre]} في أسبوع واحد`,
@@ -1155,8 +1152,25 @@ function generateAdvancedIdea() {
         `كيف تخدع أصدقاءك في ${genreLabels[genre]} بطريقة ذكية`,
         // ... (يمكنك الاستمرار بإضافة أفكار بنفس النمط)
     ];
-
-    setTimeout(() => {
+                    const genreLabel = genreLabels[genre] || genre;
+ 
+            const prompt = `أنت خبير محتوى يوتيوب للجيمرز العرب. اقترح 15 فكرة فيديو إبداعية ومتنوعة لقناة جيمينج تخص: "${genreLabel}".
+الرد بالعربي فقط. كل فكرة في سطر.`;
+ 
+            fetch("https://api.anthropic.com/v1/messages", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    model: "claude-sonnet-4-6",
+                    max_tokens: 1000,
+                    messages: [{ role: "user", content: prompt }]
+                })
+            })
+            .then(r => r.json())
+            .then(data => {
+                const text = data.content?.map(i => i.text || "").join("") || "⚠️ تعذّر التوليد، حاول مرة أخرى.";
+                const lines = text.split("\n").filter(l => l.trim());
+      setTimeout(() => {
         // اختيار 5 أفكار عشوائية من المصفوفة
         const selectedIdeas = allIdeas.sort(() => 0.5 - Math.random()).slice(0, 5);
         
