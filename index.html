@@ -1101,25 +1101,74 @@
             showToast('📋 تم نسخ الكلمات المفتاحية بالكامل!');
         }
 
-        function generateAdvancedIdea() {
-            const genre = document.getElementById('gameGenre').value;
-            const resultDiv = document.getElementById('ideaResult');
-            resultDiv.classList.remove('hidden');
-            resultDiv.innerHTML = `<div class="flex items-center gap-2 text-purple-400"><span class="animate-spin text-lg">⏳</span> <span>جاري توليد الأفكار بالذكاء الاصطناعي...</span></div>`;
+function generateAdvancedIdea() {
+    const genre = document.getElementById('gameGenre').value;
+    const resultDiv = document.getElementById('ideaResult');
+    resultDiv.classList.remove('hidden');
+    resultDiv.innerHTML = `<div class="flex items-center gap-2 text-purple-400"><span class="animate-spin text-lg">⏳</span> <span>جاري توليد الأفكار...</span></div>`;
 
-            const genreLabels = {
-                roblox_dev: "تطوير وتصميم مابات الألعاب",
-                roblox_script: "مراجعة وتجربة السكربتات المساعدة",
-                freefire: "فري فاير",
-                pubg: "ببجي",
-                minecraft: "ماين كرافت",
-                fortnite: "فورت نايت"
-            };
-            const genreLabel = genreLabels[genre] || genre;
+    // القائمة المحدثة للألعاب
+    const genreLabels = {
+        roblox_adoptme: "Adopt Me!",
+        roblox_brookhaven: "Brookhaven",
+        roblox_bloxfruits: "Blox Fruits",
+        roblox_pet99: "Pet Simulator 99",
+        roblox_mm2: "Murder Mystery 2",
+        freefire: "فري فاير",
+        pubg: "ببجي موبايل",
+        codm: "Call of Duty Mobile",
+        minecraft_surv: "ماين كرافت سيرفايفل",
+        minecraft_creat: "ماين كرافت كرييتف",
+        fortnite: "فورت نايت",
+        valorant: "فالورانت",
+        lol: "League of Legends",
+        genshin: "Genshin Impact",
+        amongus: "Among Us",
+        brawl: "Brawl Stars",
+        clash: "Clash of Clans",
+        subway: "Subway Surfers",
+        temple: "Temple Run 2",
+        fc24: "EA Sports FC 24"
+    };
 
-            const prompt = `أنت خبير محتوى يوتيوب للجيمرز العرب. اقترح 15 فكرة فيديو إبداعية ومتنوعة لقناة جيمينج تخص: "${genreLabel}".
-الرد بالعربي فقط. كل فكرة في سطر.`;
+    // مصفوفة الأفكار الموسعة (يمكنك إضافة المزيد هنا)
+    const allIdeas = [
+        `تحدي الـ 24 ساعة في ${genreLabels[genre]} بدون مساعدة`,
+        `أسرار وخدع في ${genreLabels[genre]} لا يعرفها أحد`,
+        `كيف تصبح محترفاً في ${genreLabels[genre]} في أسبوع واحد`,
+        `تجربة أغرب المودات في ${genreLabels[genre]}`,
+        `أخطاء فادحة يجب أن تتجنبها عند لعب ${genreLabels[genre]}`,
+        `كيف تحصل على أقوى الأدوات في ${genreLabels[genre]}`,
+        `رحلة البحث عن الكنوز المخفية في ${genreLabels[genre]}`,
+        `مقارنة بين ${genreLabels[genre]} والنسخ السابقة`,
+        `تحدي اللعب بمستوى صعوبة أسطوري في ${genreLabels[genre]}`,
+        `أفضل استراتيجيات الفوز في ${genreLabels[genre]}`,
+        `أسرار بناء قاعدة لا تقهر في ${genreLabels[genre]}`,
+        `أغرب مواقف مضحكة حصلت معي في ${genreLabels[genre]}`,
+        `كيف تطور مهاراتك في التصويب داخل ${genreLabels[genre]}`,
+        `جولة في أفخم المناطق في ${genreLabels[genre]}`,
+        `أسرع طريقة لرفع المستوى (Level Up) في ${genreLabels[genre]}`,
+        `قصة نجاحي في عالم ${genreLabels[genre]}`,
+        `تحدي المتابعين: هل يمكنني الفوز في ${genreLabels[genre]}؟`,
+        `تحليل التحديث الأخير في ${genreLabels[genre]}`,
+        `لماذا ${genreLabels[genre]} هي اللعبة الأفضل هذا العام؟`,
+        `كيف تخدع أصدقاءك في ${genreLabels[genre]} بطريقة ذكية`,
+        // ... (يمكنك الاستمرار بإضافة أفكار بنفس النمط)
+    ];
 
+    setTimeout(() => {
+        // اختيار 5 أفكار عشوائية من المصفوفة
+        const selectedIdeas = allIdeas.sort(() => 0.5 - Math.random()).slice(0, 5);
+        
+        let html = `<div class="mb-3 flex items-center gap-2"><span class="text-purple-400 font-bold text-xs">🎯 أفكار تريند لـ ${genreLabels[genre]}</span></div>`;
+        html += `<div class="space-y-1.5">`;
+        selectedIdeas.forEach(idea => {
+            html += `<div class="bg-slate-900/70 border border-slate-700/60 rounded-lg px-3 py-2 text-[11.5px] text-gray-200">${idea}</div>`;
+        });
+        html += `</div>`;
+        resultDiv.innerHTML = html;
+    }, 1000);
+}
             fetch("https://api.anthropic.com/v1/messages", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
