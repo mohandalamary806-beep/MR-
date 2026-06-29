@@ -458,14 +458,14 @@
         let adminReports  = [];
 
         function saveData() {
-            // حفظ محلي للـ demo
+            // حفظ محلي كـ backup
             localStorage.setItem('mrg_scripts',  JSON.stringify(scriptsArray));
             localStorage.setItem('mrg_comments', JSON.stringify(commentsArray));
             localStorage.setItem('mrg_reports',  JSON.stringify(adminReports));
             localStorage.setItem('mrg_last_sync', new Date().toISOString());
             
-            // في الإنتاج: أرسل البيانات للخادم
-            // syncDataToServer();
+            // حفظ على الخادم (Real-time Sync)
+            syncDataToServer();
         }
 
         function loadData() {
@@ -482,6 +482,79 @@
                 commentsArray = DEFAULT_COMMENTS.map(x => ({...x, replies: x.replies || []}));
                 adminReports  = [];
             }
+            
+            // تحميل من الخادم (جلب أحدث البيانات)
+            fetchDataFromServer();
+        }
+
+        // ================== SERVER SYNC ==================
+        function syncDataToServer() {
+            // إرسال البيانات للخادم
+            fetch(`${API_BASE_URL}/api/sync-data`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': currentUser ? `Bearer ${currentUser.token}` : 'Bearer anonymous'
+                },
+                body: JSON.stringify({
+                    scripts: scriptsArray,
+                    comments: commentsArray,
+                    reports: adminReports,
+                    userId: currentUser ? currentUser.id : null,
+                    timestamp: new Date().toISOString()
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.success) {
+                    console.log('✅ تم حفظ البيانات على الخادم');
+                } else {
+                    console.error('❌ فشل الحفظ:', data.message);
+                    showToast('⚠️ تحذير: لم يتم الحفظ على الخادم، سيتم المحاولة لاحقاً');
+                }
+            })
+            .catch(err => {
+                console.error('❌ خطأ في الاتصال بالخادم:', err);
+                showToast('⚠️ خطأ في الاتصال بالخادم');
+            });
+        }
+
+        function fetchDataFromServer() {
+            // جلب أحدث البيانات من الخادم
+            fetch(`${API_BASE_URL}/api/fetch-data`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': currentUser ? `Bearer ${currentUser.token}` : 'Bearer anonymous'
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.success) {
+                    // تحديث البيانات من الخادم
+                    if(data.scripts) scriptsArray = data.scripts;
+                    if(data.comments) commentsArray = data.comments;
+                    if(data.reports && currentUser) adminReports = data.reports;
+                    
+                    console.log('✅ تم تحديث البيانات من الخادم');
+                    renderScripts();
+                    renderComments();
+                } else {
+                    console.error('❌ فشل جلب البيانات:', data.message);
+                }
+            })
+            .catch(err => {
+                console.error('❌ خطأ في جلب البيانات من الخادم:', err);
+                // استخدم البيانات المحلية كـ fallback
+            });
+        }
+
+        // ================== REAL-TIME POLLING ==================
+        function startRealtimeSync() {
+            // تحديث البيانات كل 3 ثوان لتحديث فوري
+            setInterval(() => {
+                fetchDataFromServer();
+            }, 3000);
         }
 
         function saveAuthToken(token) {
