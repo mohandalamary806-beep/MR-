@@ -1100,8 +1100,7 @@
             navigator.clipboard.writeText(`${kw}, اسرار ${kw}, كيفية تشغيل ${kw}, احتراف ${kw}`);
             showToast('📋 تم نسخ الكلمات المفتاحية بالكامل!');
         }
-
-      function generateAdvancedIdea() {
+function generateAdvancedIdea() {
     const genre = document.getElementById('gameGenre').value;
     const resultDiv = document.getElementById('ideaResult');
     resultDiv.classList.remove('hidden');
@@ -1213,24 +1212,18 @@
         }
 
         // ================== INITIALIZATION ==================
-       window.onload = function() {
-    loadData();
-    
-    // استرجاع بيانات المستخدم إذا كان مسجلاً للدخول سابقاً
-    const savedUser = localStorage.getItem('mrg_user');
-    if (savedUser) {
-        currentUser = JSON.parse(savedUser);
-        applyLoggedInUI();
-    }
-    
-    renderScripts();
-    renderComments();
-    
-    const savedToken = getAuthToken();
-    if(savedToken) {
-        verifyTokenOnServer(savedToken);
-    }
-};
+        window.onload = function() {
+            loadData();
+            renderScripts();
+            renderComments();
+            
+            // التحقق من وجود token محفوظ
+            const savedToken = getAuthToken();
+            if(savedToken) {
+                // محاولة استعادة الجلسة من الخادم
+                verifyTokenOnServer(savedToken);
+            }
+        };
     </script>
 </body>
 </html>
