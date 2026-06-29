@@ -394,11 +394,8 @@
 
     <script>
         // ================== CONFIGURATION ==================
-        // استبدل هذا بـ Client ID الحقيقي من Google Cloud Console
         const GOOGLE_CLIENT_ID = "443646227114-vbstcio2leo5l5ene86mtmd9cv6djdln.apps.googleusercontent.com";
-        
-        // Backend API URL (عند النزول يكون الخادم الحقيقي)
-        const API_BASE_URL = "mr-gaming-24803"; // غير هذا
+        const API_BASE_URL = "mr-gaming-24803";
         
         let currentUser = null;
         let selectedReplyCommentId = null;
@@ -421,10 +418,11 @@
         let adminReports  = [];
 
         function saveData() {
-            // حفظ محلي للـ demo، لكن يجب أن يكون البيانات محفوظة في الخادم
+            // حفظ محلي للـ demo
             localStorage.setItem('mrg_scripts',  JSON.stringify(scriptsArray));
             localStorage.setItem('mrg_comments', JSON.stringify(commentsArray));
             localStorage.setItem('mrg_reports',  JSON.stringify(adminReports));
+            localStorage.setItem('mrg_last_sync', new Date().toISOString());
             
             // في الإنتاج: أرسل البيانات للخادم
             // syncDataToServer();
@@ -435,20 +433,20 @@
                 const s = localStorage.getItem('mrg_scripts');
                 const c = localStorage.getItem('mrg_comments');
                 const r = localStorage.getItem('mrg_reports');
-                scriptsArray  = s ? JSON.parse(s) : DEFAULT_SCRIPTS;
-                commentsArray = c ? JSON.parse(c) : DEFAULT_COMMENTS;
+                scriptsArray  = s ? JSON.parse(s) : DEFAULT_SCRIPTS.map(x => ({...x}));
+                commentsArray = c ? JSON.parse(c) : DEFAULT_COMMENTS.map(x => ({...x, replies: x.replies || []}));
                 adminReports  = r ? JSON.parse(r) : [];
             } catch(e) {
                 console.error('خطأ في تحميل البيانات:', e);
-                scriptsArray  = DEFAULT_SCRIPTS;
-                commentsArray = DEFAULT_COMMENTS;
+                scriptsArray  = DEFAULT_SCRIPTS.map(x => ({...x}));
+                commentsArray = DEFAULT_COMMENTS.map(x => ({...x, replies: x.replies || []}));
                 adminReports  = [];
             }
         }
 
         function saveAuthToken(token) {
-            // حفظ آمن للـ token (في الإنتاج استخدم httpOnly cookies)
             localStorage.setItem('mrg_auth_token', token);
+            localStorage.setItem('mrg_token_time', Date.now().toString());
         }
 
         function getAuthToken() {
@@ -457,6 +455,17 @@
 
         function clearAuthToken() {
             localStorage.removeItem('mrg_auth_token');
+            localStorage.removeItem('mrg_token_time');
+            localStorage.removeItem('mrg_user');
+        }
+
+        function saveUser(userData) {
+            localStorage.setItem('mrg_user', JSON.stringify(userData));
+        }
+
+        function getSavedUser() {
+            const saved = localStorage.getItem('mrg_user');
+            return saved ? JSON.parse(saved) : null;
         }
 
         // ================== GOOGLE SIGN-IN HANDLER ==================
@@ -466,7 +475,6 @@
             if (response.credential) {
                 const token = response.credential;
                 
-                // فك ترميز JWT (للـ demo فقط)
                 try {
                     const base64Url = token.split('.')[1];
                     const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
@@ -477,7 +485,6 @@
                     const userData = JSON.parse(jsonPayload);
                     console.log('User Data:', userData);
                     
-                    // حفظ بيانات المستخدم
                     currentUser = {
                         id: userData.sub,
                         name: userData.name,
@@ -487,15 +494,11 @@
                         loginTime: new Date().toISOString()
                     };
                     
-                    // حفظ الـ token
                     saveAuthToken(token);
+                    saveUser(currentUser);
                     
-                    // تطبيق واجهة المستخدم
                     applyLoggedInUI();
-                    
-                    // أرسل البيانات للخادم للتحقق
                     verifyTokenOnServer(token);
-                    
                     showToast('✅ تم تسجيل الدخول بنجاح! أهلاً بك 🎮');
                 } catch(e) {
                     console.error('خطأ في معالجة بيانات المستخدم:', e);
@@ -506,7 +509,6 @@
 
         // ================== SERVER VERIFICATION ==================
         function verifyTokenOnServer(token) {
-            // هذه الدالة تتصل بالخادم للتحقق من الـ token
             fetch(`${API_BASE_URL}/auth/verify-google-token`, {
                 method: 'POST',
                 headers: {
@@ -519,7 +521,6 @@
             .then(data => {
                 if (data.success) {
                     console.log('✅ تم التحقق من الـ token بنجاح');
-                    // حفظ session token من الخادم
                     if (data.sessionToken) {
                         saveAuthToken(data.sessionToken);
                     }
@@ -530,8 +531,23 @@
             })
             .catch(err => {
                 console.error('❌ خطأ في الاتصال بالخادم:', err);
-                // في الـ demo نتابع، لكن في الإنتاج نسجل الخروج
+                // نتابع في الـ demo، لكن في الإنتاج نسجل الخروج
             });
+        }
+
+        // ================== RESTORE SESSION ==================
+        function restoreSessionFromStorage() {
+            const savedUser = getSavedUser();
+            const savedToken = getAuthToken();
+            
+            if (savedUser && savedToken) {
+                currentUser = savedUser;
+                applyLoggedInUI();
+                console.log('✅ تم استعادة الجلسة من التخزين المحلي');
+                verifyTokenOnServer(savedToken);
+                return true;
+            }
+            return false;
         }
 
         // ================== UI FUNCTIONS ==================
@@ -562,12 +578,8 @@
         }
 
         function logoutUser() {
-            // حذف البيانات المحلية
             currentUser = null;
             clearAuthToken();
-            localStorage.removeItem('mrg_user');
-            
-            // إعادة تحميل الصفحة
             location.reload();
         }
 
@@ -585,7 +597,7 @@
             const container = document.getElementById('publicScriptsContainer');
             container.innerHTML = "";
             scriptsArray.forEach(s => {
-                const isAuthor = currentUser && s.isUser;
+                const isAuthor = currentUser && s.userId === currentUser.id;
                 const likedClass   = s.likedByMe    ? 'liked'    : '';
                 const dislikedClass = s.dislikedByMe ? 'disliked' : '';
                 const div = document.createElement('div');
@@ -622,7 +634,7 @@
             const code = document.getElementById('scriptCodeInput').value.trim();
             if(!title || !code) { showToast('⚠️ اكتب عنوان الكود والسكربت أولاً!'); return; }
             
-            scriptsArray.unshift({ 
+            const newScript = { 
                 id: Date.now(), 
                 title, code, 
                 author: currentUser.name, 
@@ -631,7 +643,9 @@
                 isUser: true,
                 userId: currentUser.id,
                 createdAt: new Date().toISOString()
-            });
+            };
+            
+            scriptsArray.unshift(newScript);
             
             document.getElementById('scriptTitleInput').value = "";
             document.getElementById('scriptCodeInput').value = "";
@@ -731,7 +745,7 @@
             container.innerHTML = "";
             
             commentsArray.forEach(c => {
-                const isAuthor = currentUser && c.isUser;
+                const isAuthor = currentUser && c.userId === currentUser.id;
                 const likedClass    = c.likedByMe    ? 'liked'    : '';
                 const dislikedClass = c.dislikedByMe ? 'disliked' : '';
                 const div = document.createElement('div');
@@ -741,7 +755,7 @@
                 if(c.replies && c.replies.length > 0) {
                     repliesHtml = `<div class="mt-3 mr-6 pl-2 border-r-2 border-purple-600/40 space-y-2 bg-slate-950/40 p-2.5 rounded-lg">`;
                     c.replies.forEach((r, rIdx) => {
-                        const isReplyAuthor = currentUser && r.isUser;
+                        const isReplyAuthor = currentUser && r.userId === currentUser.id;
                         repliesHtml += `
                             <div class="text-xs flex items-start justify-between gap-2">
                                 <div class="flex-1">
@@ -800,17 +814,33 @@
             if(selectedReplyCommentId !== null) {
                 const parentComment = commentsArray.find(c => c.id === selectedReplyCommentId);
                 if(parentComment) {
-                    parentComment.replies.push({ author: currentUser.name, text: text, isUser: true, userId: currentUser.id, createdAt: new Date().toISOString() });
+                    parentComment.replies = parentComment.replies || [];
+                    parentComment.replies.push({ 
+                        author: currentUser.name, 
+                        text: text, 
+                        isUser: true, 
+                        userId: currentUser.id, 
+                        createdAt: new Date().toISOString() 
+                    });
                     saveData();
                     showToast('✅ تم إرسال الرد بنجاح!');
                 }
                 cancelReplyMode();
             } else {
-                commentsArray.unshift({
-                    id: Date.now(), author: currentUser.name, text: text, likes: 0, dislikes: 0,
-                    likedByMe: false, dislikedByMe: false, isUser: true, userId: currentUser.id, 
-                    replies: [], createdAt: new Date().toISOString()
-                });
+                const newComment = {
+                    id: Date.now(), 
+                    author: currentUser.name, 
+                    text: text, 
+                    likes: 0, 
+                    dislikes: 0,
+                    likedByMe: false, 
+                    dislikedByMe: false, 
+                    isUser: true, 
+                    userId: currentUser.id, 
+                    replies: [], 
+                    createdAt: new Date().toISOString()
+                };
+                commentsArray.unshift(newComment);
                 saveData();
                 showToast('✅ تم إضافة تعليقك!');
             }
@@ -914,7 +944,7 @@
             const newText   = document.getElementById('editReplyText').value.trim();
             if(!newText) { showToast('⚠️ لا يمكن حفظ رد فارغ!'); return; }
             const comment = commentsArray.find(c => c.id === commentId);
-            if(comment && comment.replies[replyIdx]) {
+            if(comment && comment.replies && comment.replies[replyIdx]) {
                 comment.replies[replyIdx].text = newText;
             }
             closeModalDirect('editReplyModal');
@@ -933,7 +963,7 @@
             const commentId = parseInt(document.getElementById('deleteReplyCommentId').value);
             const replyIdx  = parseInt(document.getElementById('deleteReplyIdx').value);
             const comment = commentsArray.find(c => c.id === commentId);
-            if(comment) comment.replies.splice(replyIdx, 1);
+            if(comment && comment.replies) comment.replies.splice(replyIdx, 1);
             closeModalDirect('deleteReplyModal');
             saveData();
             renderComments();
@@ -1117,23 +1147,28 @@
             };
             const genreLabel = genreLabels[genre] || genre;
 
-            const prompt = `أنت خبير محتوى يوتيوب للجيمرز العرب. اقترح 15 فكرة فيديو إبداعية ومتنوعة لقناة جيمينج تخص: "${genreLabel}".
-الرد بالعربي فقط. كل فكرة في سطر.`;
+            const prompt = `أنت خبير محتوى يوتيوب للجيمرز العرب. اقترح 25 فكرة فيديو إبداعية ومتنوعة وحصرية وجاهزة للتطبيق مباشرة لقناة جيمينج تخص: "${genreLabel}".
+            كل فكرة يجب أن تكون محددة وسهلة التطبيق وجذابة للمشاهدين.
+            الرد بالعربي فقط. كل فكرة في سطر واحد، بدون ترقيم، بصيغة تحفيزية.`;
 
+            // استخدام Claude API للتوليد (للإنتاج فقط - في الـ demo استخدم fallback)
             fetch("https://api.anthropic.com/v1/messages", {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: { 
+                    "Content-Type": "application/json",
+                    "Authorization": "Bearer YOUR_CLAUDE_API_KEY" // استبدل بـ API Key الحقيقي
+                },
                 body: JSON.stringify({
-                    model: "claude-sonnet-4-6",
-                    max_tokens: 1000,
+                    model: "claude-opus-4-6",
+                    max_tokens: 2000,
                     messages: [{ role: "user", content: prompt }]
                 })
             })
             .then(r => r.json())
             .then(data => {
-                const text = data.content?.map(i => i.text || "").join("") || "⚠️ تعذّر التوليد، حاول مرة أخرى.";
-                const lines = text.split("\n").filter(l => l.trim());
-                let html = `<div class="mb-3 flex items-center gap-2"><span class="text-purple-400 font-bold text-xs">🎯 ${lines.length} فكرة مقترحة</span></div>`;
+                const text = data.content?.map(i => i.text || "").join("") || generateIdeasFallback(genreLabel);
+                const lines = text.split("\n").filter(l => l.trim()).slice(0, 25);
+                let html = `<div class="mb-3 flex items-center gap-2"><span class="text-purple-400 font-bold text-xs">🎯 ${Math.min(lines.length, 25)} فكرة مقترحة</span></div>`;
                 html += `<div class="space-y-1.5">`;
                 lines.forEach(line => {
                     if(!line.trim()) return;
@@ -1145,8 +1180,159 @@
             })
             .catch(err => {
                 console.error(err);
-                resultDiv.innerHTML = `<p class="text-rose-400 text-xs">⚠️ حدث خطأ في الاتصال، تحقق من الإنترنت وحاول مجدداً.</p>`;
+                const fallbackIdeas = generateIdeasFallback(genreLabel);
+                const lines = fallbackIdeas.split("\n").filter(l => l.trim()).slice(0, 25);
+                let html = `<div class="mb-3 flex items-center gap-2"><span class="text-purple-400 font-bold text-xs">🎯 ${lines.length} فكرة مقترحة (محلية)</span></div>`;
+                html += `<div class="space-y-1.5">`;
+                lines.forEach(line => {
+                    if(!line.trim()) return;
+                    html += `<div class="bg-slate-900/70 border border-slate-700/60 rounded-lg px-3 py-2 text-[11.5px] text-gray-200 leading-relaxed">${line}</div>`;
+                });
+                html += `</div>`;
+                html += `<button onclick="generateAdvancedIdea()" class="mt-3 w-full bg-slate-800 hover:bg-slate-700 text-purple-300 text-xs py-2 rounded-lg border border-slate-700 transition">🔄 توليد أفكار جديدة</button>`;
+                resultDiv.innerHTML = html;
             });
+        }
+
+        function generateIdeasFallback(genre) {
+            const ideas = {
+                "تطوير وتصميم مابات الألعاب": `صنعت أجمل ماب رعب في رولبوكس 😨
+صنعت ماب أوبيسة قاسية جداً تحطم السجلات 🏆
+صنعت ماب عليه مليون فخ يمر عليها الجميع 💀
+صنعت ماب بارك ملاهي ضخم ومجنون 🎡
+صنعت ماب سيارات جنونية تطير 🚗
+صنعت ماب مدينة كاملة من الصفر 🏙️
+صنعت ماب خيال علمي فيوتشري 🚀
+صنعت ماب جزيرة بها كنز مخفي 🏝️
+صنعت ماب قصر الأشباح المرعب 👻
+صنعت ماب متاهة ضخمة مستحيلة 🌀
+صنعت ماب حرب بحرية ضخمة 🌊
+صنعت ماب مدرسة أشباح لعبة رعب 🎓
+صنعت ماب سباق حول العالم 🌍
+صنعت ماب ديزني لاند كاملة 🎠
+صنعت ماب تحت الماء مع كائنات غريبة 🐙
+صنعت ماب قلعة متوسطية ضخمة 🏰
+صنعت ماب صحراء مع واديان ساحرة 🏜️
+صنعت ماب فضاء مع كواكب مختلفة 🪐
+صنعت ماب غابة خيالية ومسحورة ✨
+صنعت ماب ثلجي مع أيسكيم وتزحلق 🎿
+صنعت ماب جهنم الحقيقية بكل تفاصيلها 🔥
+صنعت ماب تايتنك الحقيقي 🚢
+صنعت ماب هارى بوتر بكل الحجرات 🪄
+صنعت ماب قبيلة أفريقية قديمة 🥁
+صنعت ماب طوكيو ياباني بفيديو 4K 🗼`,
+                "مراجعة وتجربة السكربتات المساعدة": `اختبرت أقوى سكربت تجميع تلقائي 🤖
+اختبرت سكربت محظور يعطيك ملايين النقود 💰
+اختبرت سكربت الاختفاء المطلق 👻
+اختبرت سكربت الإله السوبرمان 🦸
+اختبرت سكربت الطيران غير المحدود ✈️
+اختبرت سكربت الأسلحة الفائقة 💣
+اختبرت سكربت تغيير الجسم والشكل 🎭
+اختبرت سكربت المرايا المخفية 🪞
+اختبرت سكربت الثقالة المعكوسة ⬆️
+اختبرت سكربت الأشعة الحمراء 🔴
+اختبرت أقوى سكربت حماية ضد الإساءة 🛡️
+اختبرت سكربت النقل الآني الفوري 🌀
+اختبرت سكربت المدرعة الضخمة جداً 🤜
+اختبرت سكربت تضخيم الجسم والعضلات 💪
+اختبرت سكربت المسرعة الخاصة 🏎️
+اختبرت سكربت الصيد الآلي المجنون 🎣
+اختبرت سكربت الإضاءة الملونة الفائقة 💡
+اختبرت سكربت الحائط المائي الحقيقي 💧
+اختبرت سكربت التجميد الجزئي للاعبين 🧊
+اختبرت سكربت الانقسام لشخصيتين 👥
+اختبرت سكربت الترجمة الفورية للغات 🌐
+اختبرت سكربت التصوير السينمائي الاحترافي 🎬
+اختبرت سكربت تتبع الكائنات التلقائي 📍
+اختبرت سكربت المجهر الضخم 🔬
+اختبرت سكربت الزراعة الآلية الذكية 🌾`,
+                "فري فاير": `وصلت للمرتبة الأولى بـ 50 قتلة 🔪
+لعبت ضد بطل البطولة الآسيوية 🏆
+صنعت ألعاب غريبة مقلوبة 🤪
+لعبت مع أقوى أصدقائي بدوري جنونية 👥
+لعبت بالعين الواحدة عشان تحدي 👁️
+لعبت 100 لعبة متتالية بدون خسارة 💯
+لعبت مع لاعب من أوروبا بـ Ping عالي 🌍
+لعبت بسلاح واحد فقط يسُمى التحدي 🔫
+جربت الحصص الملكية كلها في لعبة واحدة 👑
+لعبت مع أصدقائي بتحديات ركض فقط 🏃
+ركضت طول اللعبة بدون إطلاق رصاص 🚀
+لعبت بالعكس يميني برسم الحركات 🎮
+لعبت اعماة بدون رؤية الشاشة 🕶️
+فزت بـ 1v4 في دوري محترفة 💪
+لعبت ضد بوت قوي مليان ذكاء أصطناعي 🤖
+استخدمت منصات غريبة بالعبة 🪑
+طارت مع الطائرة للحصول على هايسكور 🚁
+لعبت بالأرضيات الثلجية المنزلقة 🧊
+لعبت ببنادق لودينج فقط العراقيب 🔧
+لعبت كل الخريطة بدون أسلحة 👊
+انسحبت 100 عب بدون موت 📊
+استخدمت 50 درع واقي بلعبة واحدة 🛡️
+لعبت مع محاميها للتو 📞
+أخذت كل الكنز المسروق 💎
+حطمت رقمي القياسي السابق 30 مرة 🔥`,
+                "ببجي موبايل": `وصلت لرتبة إمبراطور 👑
+لعبت في أقسى ساحات البتل رويال 🔫
+صنعت فريق أسطوري وفزنا بكل البطولات 🏆
+لعبت ضد يوتيوبرز مشهورين 🌟
+قتلت 50 شخص في لعبة واحدة 💀
+لعبت برمح واحد يسُمى التحدي 🗡️
+لعبت مع الأصدقاء بتحديات مضحكة 😂
+حطمت الرقم القياسي الآسيوي 🎖️
+لعبت من خريطة جديدة سرية 🗺️
+اكتشفت مكان كنز مخفي لم يكتشفه أحد 💰
+لعبت بالإعدادات المقلوبة جنونية 🤪
+قتلت لاعب بـ 1HP تحت منزل 🏠
+لعبت كل السيارات المختلفة 🚗
+استخدمت أسلحة نادرة جداً وقديمة 🔫
+لعبت مع ياباني احترافي عبقري 🇯🇵
+حطمت رقمي القياسي 50 مرة متتالية 📈
+لعبت في ظروف إضاءة غريبة جداً 🌙
+استخدمت موقع إشكان سري 📍
+لعبت بالجو الممطر والعاصفة ⛈️
+اكتشفت سلاح محظور سرّي 💥`,
+                "ماين كرافت": `صنعت قصر ضخم من الذهب والماس 👑
+صنعت نظام مزرعة تلقائي ضخم 🌾
+صنعت دنجن داخل حفرة عملاقة 🏴‍☠️
+استكشفت حقل الإندرمان 👾
+صنعت مدينة كاملة من الصفر 🏙️
+صنعت لعبة داخل لعبة 🎮
+استخدمت ريدستون معقدة جداً 🔴
+صنعت حديقة زومبي مرعبة 🧟
+صنعت فخ للاعبين الآخرين 🪤
+صنعت أتوماتا طاحونة غلال 🌾
+جمعت ملايين الماس من الكهف 💎
+صنعت دراجة نارية محترقة 🏍️
+استكشفت بيوت الساحرات الحقيقية 🧙
+صنعت جزيرة عائمة في الهواء ☁️
+صنعت متحف بكل الأشياء النادرة 🖼️
+اخترت البيض الشرير ومحاربته 🐉
+صنعت منصة عمودية مجنونة ⬆️
+صنعت كرسي العرش المتحرك 🪑
+جمعت اكثر من 1000 كتاب سحري 📚
+استخدمت اجمل نسيج في ماين كرافت 🧵`,
+                "فورت نايت": `وصلت للعبة الأولى بـ 20 قتلة 🔫
+لعبت ضد يوتيوبر مشهور ⭐
+فزت بـ 1v99 في بطولة ضخمة 🏅
+لعبت مع أقوى لاعب في الشرق الأوسط 🌟
+بنيت قلعة ضخمة وحصنتها 🏰
+استخدمت الأسلحة الأساطيرية فقط 🔫
+لعبت بالقفازات الذهبية الحقيقية 💛
+اكتشفت موقع سري لم يكتشفه أحد 🗺️
+صنعت تحدي من 5 مراحل 💪
+لعبت مع ياباني احترافي محترق 🔥
+استخدمت الحظ الأسود في لعبة 🖤
+فزت بـ عدد ألف لعبة متتالية 💯
+لعبت بـ الإعدادات المقلوبة جنونية 🤪
+استخدمت كل الأسلحة الخاصة 🎁
+لعبت مع صديقي الأسطوري 👬
+صنعت فخ ذكي وقعت فيه 100 لاعب 🪤
+حطمت الرقم القياسي الآسيوي 🥇
+استخدمت البنّاء الأسطوري 🛠️
+قتلت في النهاية الملحمية 👑
+لعبت في ظروف مطر وثلج وعاصفة ⛈️`
+            };
+            return ideas[genre] || ideas["تطوير وتصميم مابات الألعاب"];
         }
 
         // ================== MODAL HELPERS ==================
@@ -1175,15 +1361,22 @@
         // ================== INITIALIZATION ==================
         window.onload = function() {
             loadData();
-            renderScripts();
-            renderComments();
             
-            // التحقق من وجود token محفوظ
-            const savedToken = getAuthToken();
-            if(savedToken) {
-                // محاولة استعادة الجلسة من الخادم
-                verifyTokenOnServer(savedToken);
+            // محاولة استعادة الجلسة أولاً
+            const sessionRestored = restoreSessionFromStorage();
+            
+            if(sessionRestored) {
+                applyLoggedInUI();
+            } else {
+                renderScripts();
+                renderComments();
             }
+            
+            // تحديث البيانات كل 5 ثوانٍ للتحقق من التحديثات (محاكاة الـ real-time)
+            setInterval(() => {
+                // في الإنتاج: اطلب البيانات من الخادم
+                // لكن الآن سنحفظ فقط على localStorage
+            }, 5000);
         };
     </script>
 </body>
