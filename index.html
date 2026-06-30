@@ -1944,5 +1944,88 @@
             // (اللي بتتنادى من جوه loadData()) عن طريق Firebase Firestore realtime listeners.
         };
     </script>
+    <!-- ============================================================
+         إضافة جديدة فقط: نافذة اختيار اسم العرض بعد تسجيل الدخول بجوجل
+         (مفيش أي سطر اتغير أو اتحذف من الكود الأصلي فوق - ده كله كود مُضاف)
+    ============================================================ -->
+    <div id="chooseNameModal" class="modal-overlay" onclick="closeModal('chooseNameModal', event)">
+        <div class="modal-box" style="max-width:420px;">
+            <div class="flex justify-between items-center mb-5">
+                <h3 class="text-lg font-black text-purple-400">🎮 اختار اسمك في الموقع</h3>
+                <button onclick="closeModalDirect('chooseNameModal')" class="text-gray-500 hover:text-white text-xl leading-none">✕</button>
+            </div>
+            <p class="text-xs text-gray-400 mb-3">أهلاً بيك! عايز تتسمى بإيه في موقع MR جيمنج؟ الاسم ده هيظهر في التعليقات والسكربتات بدل اسمك في جوجل.</p>
+            <input type="text" id="customDisplayNameInput" maxlength="30" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-white text-sm mb-4 focus:outline-none focus:border-purple-500 text-right" placeholder="اكتب الاسم اللي عايزه هنا...">
+            <div class="flex gap-2 justify-end">
+                <button onclick="closeModalDirect('chooseNameModal')" class="px-4 py-2 rounded-xl bg-slate-800 text-gray-400 hover:text-white text-xs transition">لاحقاً</button>
+                <button onclick="confirmCustomDisplayName()" class="px-5 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-fuchsia-600 text-white font-bold text-xs shadow-lg hover:opacity-90 transition">✅ تأكيد الاسم</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================================
+        // إضافة جديدة فقط: سؤال المستخدم عن الاسم اللي عايز يتسمى بيه
+        // في الموقع بعد ما يسجل دخول بجوجل، من غير ما نلمس أي كود فوق.
+        // ============================================================
+
+        // بنحتفظ بنسخة من الفنكشن الأصلية اللي بتشتغل أول ما حد يسجل دخول بجوجل
+        var originalHandleGoogleSignIn = handleGoogleSignIn;
+
+        // بنستبدلها بفنكشن جديدة: تشغل الأصلية الأول زي ما هي بالظبط تماماً،
+        // وبعدين تسأل المستخدم عن اسمه في الموقع (لو لسه ما اخترش اسم قبل كده)
+        handleGoogleSignIn = function(response) {
+            originalHandleGoogleSignIn(response);
+
+            setTimeout(function() {
+                if (!currentUser) return;
+
+                var savedCustomName = localStorage.getItem('mrg_custom_name_' + currentUser.id);
+
+                if (savedCustomName) {
+                    // المستخدم سبق واختار اسم قبل كده على الجهاز ده، نطبقه تلقائي من غير ما نسأله تاني
+                    currentUser.name = savedCustomName;
+                    saveUser(currentUser);
+                    applyLoggedInUI();
+                } else {
+                    // أول مرة يسجل فيها دخول من الجهاز ده، نعرض عليه نافذة اختيار الاسم
+                    var input = document.getElementById('customDisplayNameInput');
+                    if (input) input.value = currentUser.name || '';
+                    var modal = document.getElementById('chooseNameModal');
+                    if (modal) modal.classList.add('open');
+                }
+            }, 400);
+        };
+
+        // تنضيف بسيط للاسم عشان نمنع أي أكواد HTML تدخل بالغلط وتأثر على باقي الزوار
+        function sanitizeDisplayName(str) {
+            return str.replace(/[<>&"']/g, function(ch) {
+                if (ch === '<') return '&lt;';
+                if (ch === '>') return '&gt;';
+                if (ch === '&') return '&amp;';
+                if (ch === '"') return '&quot;';
+                return '&#39;';
+            });
+        }
+
+        // بتتنفذ لما المستخدم يدوس على زرار "تأكيد الاسم"
+        function confirmCustomDisplayName() {
+            var input = document.getElementById('customDisplayNameInput');
+            var newName = sanitizeDisplayName(input.value.trim()).slice(0, 30);
+
+            if (!newName) {
+                showToast('⚠️ من فضلك اكتب اسم صحيح');
+                return;
+            }
+            if (!currentUser) return;
+
+            currentUser.name = newName;
+            localStorage.setItem('mrg_custom_name_' + currentUser.id, newName);
+            saveUser(currentUser);
+            applyLoggedInUI();
+            closeModalDirect('chooseNameModal');
+            showToast('✅ تم حفظ اسمك: ' + newName);
+        }
+    </script>
 </body>
 </html>
