@@ -4,6 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MR جيمنج V5 | المنصة المعتمدة لكل الجيمرز</title>
+
+    <!-- ============================================================
+         إضافة جديدة فقط: وسوم SEO وفافيكون لتحسين ظهور الموقع
+         (مفيش أي سطر اتغير أو اتحذف من الكود الأصلي - ده كله كود مُضاف)
+    ============================================================ -->
+    <meta name="description" content="MR جيمنج - المنصة العربية الأولى لمشاركة سكربتات وأكواد الألعاب، توليد أفكار فيديوهات تريند، واستخراج كلمات السيو والهاشتاجات لمحتوى الجيمنج.">
+    <meta name="keywords" content="سكربتات روبلوكس, سكربتات ألعاب, MR جيمنج, جيمنج عربي, افكار فيديوهات جيمنج, سيو جيمنج">
+    <meta name="author" content="MR جيمنج">
+    <meta property="og:title" content="MR جيمنج V5 | المنصة المعتمدة لكل الجيمرز">
+    <meta property="og:description" content="شارك سكربتاتك، اكتشف أفكار محتوى تريند، وظبط كلمات السيو لقناتك في مكان واحد.">
+    <meta property="og:type" content="website">
+    <meta name="theme-color" content="#0f1123">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8E%AE%3C/text%3E%3C/svg%3E">
+
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Sign-In SDK -->
@@ -261,6 +275,19 @@
     <div id="scripts-explore" class="tab-content container mx-auto px-4 pb-24 max-w-4xl">
         <div class="glass-card p-6 rounded-2xl">
             <h3 class="text-2xl font-bold text-blue-400 mb-6">🌐 مكتبة السكربتات العامة</h3>
+
+            <!-- ============================================================
+                 إضافة جديدة فقط: شريط بحث وفرز للسكربتات
+                 (مفيش أي عنصر اتغير أو اتحذف فوق - ده كله مُضاف)
+            ============================================================ -->
+            <div class="flex flex-col sm:flex-row gap-3 mb-5">
+                <input type="text" id="scriptsSearchInput" oninput="filterAndRenderScripts()" placeholder="🔍 دور على سكربت بالاسم أو الكود أو الناشر..." class="flex-1 bg-slate-900 border border-slate-800 rounded-xl p-2.5 text-white text-sm focus:outline-none focus:border-blue-500 text-right">
+                <select id="scriptsSortSelect" onchange="filterAndRenderScripts()" class="bg-slate-900 border border-slate-800 rounded-xl p-2.5 text-white text-sm focus:outline-none focus:border-blue-500">
+                    <option value="newest">🆕 الأحدث أولاً</option>
+                    <option value="likes">🔥 الأكثر إعجابًا</option>
+                </select>
+            </div>
+
             <div id="publicScriptsContainer" class="space-y-4">
                 <!-- Scripts render here -->
             </div>
@@ -431,6 +458,33 @@
             </div>
         </div>
     </div>
+
+    <!-- ============================================================
+         إضافة جديدة فقط: فوتر للموقع وزرار العودة لأعلى الصفحة
+         (مفيش أي عنصر اتغير أو اتحذف فوق - ده كله مُضاف)
+    ============================================================ -->
+    <footer class="border-t border-purple-950/50 mt-10 py-8 px-4 text-center">
+        <div class="container mx-auto max-w-4xl">
+            <div class="flex items-center justify-center gap-2 mb-3">
+                <span class="text-2xl">🎮</span>
+                <span class="font-black text-lg moving-neon-text">MR جيمنج</span>
+            </div>
+            <p class="text-gray-500 text-xs mb-2">المكان الأول لتظبيط ومشاركة سكربتات وأفكار محتوى الجيمنج باللغة العربية.</p>
+            <p class="text-gray-600 text-[11px] mb-1">👁️ زيارات الموقع: <span id="liveVisitorCount" class="text-purple-400 font-bold">...</span></p>
+            <p class="text-gray-600 text-[11px]">© <span id="footerYear"></span> MR جيمنج - جميع الحقوق محفوظة.</p>
+        </div>
+    </footer>
+
+    <button id="scrollTopBtn" onclick="window.scrollTo({top:0, behavior:'smooth'})" class="hidden fixed bottom-6 left-6 z-40 w-11 h-11 rounded-full bg-purple-600 hover:bg-purple-500 text-white text-lg shadow-lg shadow-purple-900/50 transition" title="العودة لأعلى الصفحة">⬆️</button>
+    <script>
+        document.getElementById('footerYear').textContent = new Date().getFullYear();
+        window.addEventListener('scroll', function() {
+            const btn = document.getElementById('scrollTopBtn');
+            if(!btn) return;
+            if(window.scrollY > 400) btn.classList.remove('hidden');
+            else btn.classList.add('hidden');
+        });
+    </script>
 
     <!-- ================== Firebase (مزامنة حقيقية لكل الزوار) ================== -->
     <script type="module">
@@ -2631,6 +2685,265 @@
 
         // أول تحميل لسجل البلاغات المحلولة
         fetchResolvedReportsArchive();
+
+        // ============================================================
+        // إضافات جديدة فقط (من هنا لآخر الملف): مفيش أي سطر اتغير أو
+        // اتحذف من الكود الأصلي فوق. كل اللي تحت ده كود مُضاف بالكامل،
+        // وبيستخدم نفس أسلوب "اللف حول الدالة الأصلية" المُتّبع فوق
+        // عشان منلمسش أي دالة قديمة.
+        // ============================================================
+
+        // ---------- 1) بحث وفرز مكتبة السكربتات ----------
+        let scriptsSearchQuery = '';
+        let scriptsSortMode = 'newest';
+
+        function filterAndRenderScripts() {
+            const input = document.getElementById('scriptsSearchInput');
+            const sortSel = document.getElementById('scriptsSortSelect');
+            scriptsSearchQuery = input ? input.value.trim().toLowerCase() : '';
+            scriptsSortMode = sortSel ? sortSel.value : 'newest';
+            renderScripts();
+        }
+
+        var originalRenderScripts_searchWrap = renderScripts;
+        renderScripts = function() {
+            const fullScriptsArray = scriptsArray;
+            let working = fullScriptsArray.slice();
+
+            if(scriptsSearchQuery) {
+                working = working.filter(s =>
+                    (s.title  || '').toLowerCase().includes(scriptsSearchQuery) ||
+                    (s.author || '').toLowerCase().includes(scriptsSearchQuery) ||
+                    (s.code   || '').toLowerCase().includes(scriptsSearchQuery)
+                );
+            }
+            if(scriptsSortMode === 'likes') {
+                working.sort((a, b) => (b.likes || 0) - (a.likes || 0));
+            }
+
+            scriptsArray = working;
+            originalRenderScripts_searchWrap();
+            scriptsArray = fullScriptsArray;
+
+            const container = document.getElementById('publicScriptsContainer');
+            if(container && working.length === 0) {
+                container.innerHTML = `<p class="text-gray-500 text-sm text-center py-8">😕 مفيش نتائج مطابقة لبحثك.</p>`;
+            }
+        };
+
+        // ---------- 2) صلاحية حذف أي سكربت للإدارة فقط (نفس فكرة حذف التعليقات الموجودة بالفعل) ----------
+        function adminDeleteScript(id) {
+            if(!isReportsAdminUser()) { showToast('⚠️ هذا الإجراء متاح للإدارة فقط'); return; }
+            if(confirm('هل تريد حذف هذا السكربت كأدمن؟')) {
+                deleteScript(parseInt(id));
+            }
+        }
+
+        function injectAdminScriptControls() {
+            if(!isReportsAdminUser()) return;
+            document.querySelectorAll('#publicScriptsContainer .script-card').forEach(card => {
+                const likeBtn = card.querySelector('button[onclick^="likeScript("]');
+                if(!likeBtn) return;
+                const m = likeBtn.getAttribute('onclick').match(/likeScript\((\d+)\)/);
+                if(!m) return;
+                const scriptId = m[1];
+
+                const controlsRow = card.querySelector('.flex.justify-between.items-center.text-xs.pt-1 > div:last-child');
+                if(!controlsRow) return;
+                // لو السكربت أصلاً بتاع صاحبه (عنده زرار تعديل)، فمش محتاجين نضيف زرار أدمن تاني
+                if(controlsRow.querySelector('button[onclick^="editScript("]')) return;
+                if(controlsRow.querySelector('.mrg-admin-script-del')) return;
+
+                const btn = document.createElement('button');
+                btn.className = 'mrg-admin-script-del text-rose-400 underline hover:text-rose-300 mr-2';
+                btn.textContent = '🛡️ حذف (أدمن)';
+                btn.onclick = function() { adminDeleteScript(scriptId); };
+                controlsRow.appendChild(btn);
+            });
+        }
+
+        var originalRenderScripts_adminWrap = renderScripts;
+        renderScripts = function() {
+            originalRenderScripts_adminWrap();
+            injectAdminScriptControls();
+        };
+
+        // ---------- 3) عداد زيارات الموقع (Firebase) ----------
+        function trackSiteVisit() {
+            if(!window.mrgFirebase) { setTimeout(trackSiteVisit, 400); return; }
+            const { db, doc, getDoc, setDoc, onSnapshot } = window.mrgFirebase;
+            const ref = doc(db, "mrg_site", "visitStats");
+
+            getDoc(ref).then(snap => {
+                const current = (snap.exists() && typeof snap.data().totalVisits === 'number') ? snap.data().totalVisits : 0;
+                setDoc(ref, { totalVisits: current + 1, lastVisitAt: new Date().toISOString() })
+                    .catch(err => console.error('❌ فشل تحديث عداد الزيارات:', err));
+            }).catch(err => console.error('❌ فشل قراءة عداد الزيارات:', err));
+
+            onSnapshot(ref, snap => {
+                const total = snap.exists() ? (snap.data().totalVisits || 0) : 0;
+                const liveEl = document.getElementById('liveVisitorCount');
+                if(liveEl) liveEl.textContent = total.toLocaleString('ar-EG');
+                const panelEl = document.getElementById('adminPanelTotalVisits');
+                if(panelEl) panelEl.textContent = total.toLocaleString('ar-EG');
+            }, err => console.error('❌ خطأ مزامنة عداد الزيارات:', err));
+        }
+
+        // ---------- 4) إعلان عام للموقع تتحكم فيه الإدارة فقط ----------
+        function ensureSiteBannerContainer() {
+            if(document.getElementById('siteAnnouncementBanner')) return;
+            const nav = document.querySelector('nav');
+            if(!nav) return;
+            nav.insertAdjacentHTML('afterend', `
+                <div id="siteAnnouncementBanner" class="hidden bg-gradient-to-r from-purple-700/90 to-indigo-700/90 text-white text-center text-xs sm:text-sm font-bold py-2 px-4">
+                    <span id="siteAnnouncementText"></span>
+                </div>
+            `);
+        }
+
+        function renderSiteAnnouncement(text) {
+            ensureSiteBannerContainer();
+            const banner = document.getElementById('siteAnnouncementBanner');
+            const textEl = document.getElementById('siteAnnouncementText');
+            if(!banner || !textEl) return;
+            if(text && text.trim()) {
+                textEl.textContent = '📢 ' + text.trim();
+                banner.classList.remove('hidden');
+            } else {
+                banner.classList.add('hidden');
+            }
+        }
+
+        function fetchSiteAnnouncement() {
+            if(!window.mrgFirebase) { setTimeout(fetchSiteAnnouncement, 400); return; }
+            const { db, doc, getDoc, onSnapshot } = window.mrgFirebase;
+            const ref = doc(db, "mrg_site", "announcement");
+
+            getDoc(ref).then(snap => {
+                renderSiteAnnouncement(snap.exists() ? snap.data().text : '');
+            }).catch(err => console.error('❌ خطأ في جلب إعلان الموقع:', err));
+
+            onSnapshot(ref, snap => {
+                renderSiteAnnouncement(snap.exists() ? snap.data().text : '');
+            }, err => console.error('❌ خطأ مزامنة إعلان الموقع:', err));
+        }
+
+        function publishSiteAnnouncement() {
+            if(!isReportsAdminUser()) { showToast('⚠️ هذا الإجراء متاح للإدارة فقط'); return; }
+            const input = document.getElementById('adminAnnouncementInput');
+            if(!input || !window.mrgFirebase) return;
+            const text = input.value.trim();
+            const { db, doc, setDoc } = window.mrgFirebase;
+            setDoc(doc(db, "mrg_site", "announcement"), {
+                text, updatedAt: new Date().toISOString(), by: currentUser ? currentUser.email : ''
+            }).then(() => {
+                showToast(text ? '✅ تم نشر الإعلان لكل الزوار!' : '🗑️ تم إزالة الإعلان.');
+            }).catch(err => {
+                console.error('❌ فشل نشر الإعلان:', err);
+                showToast('⚠️ حصل خطأ أثناء النشر');
+            });
+        }
+
+        function clearSiteAnnouncement() {
+            const input = document.getElementById('adminAnnouncementInput');
+            if(input) input.value = '';
+            publishSiteAnnouncement();
+        }
+
+        // ---------- 5) لوحة تحكم الإدارة (تاب جديد مخفي إلا على إيميل الإدارة) ----------
+        function ensureAdminPanelTab() {
+            if(document.getElementById('admin-panel')) return;
+            document.body.insertAdjacentHTML('beforeend', `
+                <div id="admin-panel" class="tab-content container mx-auto px-4 pb-24 max-w-5xl">
+                    <div class="glass-card p-6 rounded-2xl mb-6">
+                        <h3 class="text-2xl font-bold text-purple-300 mb-2">🛡️ لوحة تحكم الإدارة</h3>
+                        <p class="text-[11px] text-gray-500 mb-6">🔒 هذه اللوحة خاصة بإدارة موقع MR جيمنج فقط</p>
+
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                            <div class="p-4 bg-slate-900/70 rounded-xl border border-slate-800 text-center">
+                                <div class="text-2xl font-black text-blue-400" id="adminPanelTotalScripts">0</div>
+                                <div class="text-[11px] text-gray-500 mt-1">إجمالي السكربتات</div>
+                            </div>
+                            <div class="p-4 bg-slate-900/70 rounded-xl border border-slate-800 text-center">
+                                <div class="text-2xl font-black text-purple-400" id="adminPanelTotalComments">0</div>
+                                <div class="text-[11px] text-gray-500 mt-1">إجمالي التعليقات</div>
+                            </div>
+                            <div class="p-4 bg-slate-900/70 rounded-xl border border-slate-800 text-center">
+                                <div class="text-2xl font-black text-rose-400" id="adminPanelPendingReports">0</div>
+                                <div class="text-[11px] text-gray-500 mt-1">بلاغات قيد المراجعة</div>
+                            </div>
+                            <div class="p-4 bg-slate-900/70 rounded-xl border border-slate-800 text-center">
+                                <div class="text-2xl font-black text-green-400" id="adminPanelTotalVisits">0</div>
+                                <div class="text-[11px] text-gray-500 mt-1">زيارات الموقع</div>
+                            </div>
+                        </div>
+
+                        <div class="border-t border-slate-800 pt-5">
+                            <h4 class="text-sm font-bold text-purple-300 mb-3">📢 إعلان عام لكل زوار الموقع</h4>
+                            <textarea id="adminAnnouncementInput" rows="2" placeholder="اكتب إعلان أو تنبيه هيظهر فوق لكل الزوار..." class="w-full bg-slate-900 border border-slate-800 rounded-xl p-2.5 text-white text-sm mb-3 focus:outline-none focus:border-purple-500 text-right"></textarea>
+                            <div class="flex gap-2">
+                                <button onclick="publishSiteAnnouncement()" class="px-4 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold text-xs">📢 نشر الإعلان</button>
+                                <button onclick="clearSiteAnnouncement()" class="px-4 py-2 rounded-xl bg-slate-800 text-gray-300 hover:text-white text-xs">🗑️ إزالة الإعلان</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `);
+        }
+
+        function updateAdminPanelStats() {
+            const elScripts  = document.getElementById('adminPanelTotalScripts');
+            const elComments = document.getElementById('adminPanelTotalComments');
+            const elPending  = document.getElementById('adminPanelPendingReports');
+            if(elScripts)  elScripts.textContent  = scriptsArray.length;
+            if(elComments) elComments.textContent = commentsArray.length;
+            if(elPending)  elPending.textContent  = adminReports.length;
+        }
+
+        function loadAdminAnnouncementIntoInput() {
+            const input = document.getElementById('adminAnnouncementInput');
+            if(!input || !window.mrgFirebase) return;
+            const { db, doc, getDoc } = window.mrgFirebase;
+            getDoc(doc(db, "mrg_site", "announcement")).then(snap => {
+                input.value = snap.exists() ? (snap.data().text || '') : '';
+            }).catch(err => console.error('❌ خطأ في تحميل نص الإعلان الحالي:', err));
+        }
+
+        function ensureAdminPanelNavButton() {
+            if(document.getElementById('btn-admin-panel')) return;
+            const reportsBtn = document.getElementById('btn-admin-reports');
+            if(!reportsBtn) return;
+            reportsBtn.insertAdjacentHTML('afterend', `<button onclick="switchTab('admin-panel')" id="btn-admin-panel" class="tab-btn hidden px-4 py-2 rounded-xl text-sm font-medium text-gray-400 hover:text-white transition">🛡️ لوحة تحكم الإدارة</button>`);
+        }
+
+        // بنلف حول switchTab الأصلية: بننشئ تاب لوحة الإدارة قبل ما الأصلية
+        // تحاول تفعّله (عشان منكسرش لو لسه مش موجود في الصفحة)، وبعدين
+        // بنشغل الأصلية زي ما هي بالظبط، وبعدين بنحدّث الإحصائيات
+        var originalSwitchTab_adminPanelWrap = switchTab;
+        switchTab = function(tabId) {
+            if(tabId === 'admin-panel') ensureAdminPanelTab();
+            originalSwitchTab_adminPanelWrap(tabId);
+            if(tabId === 'admin-panel') {
+                updateAdminPanelStats();
+                loadAdminAnnouncementIntoInput();
+            }
+        };
+
+        // بنلف حول applyLoggedInUI الأصلية: بنشغلها زي ما هي بالظبط، وبعدين
+        // بنضيف زرار لوحة الإدارة في القايمة ونظهره لو المستخدم هو الأدمن بس
+        var originalApplyLoggedInUI_adminPanelWrap = applyLoggedInUI;
+        applyLoggedInUI = function() {
+            originalApplyLoggedInUI_adminPanelWrap();
+            ensureAdminPanelNavButton();
+            if(isReportsAdminUser()) {
+                const btn = document.getElementById('btn-admin-panel');
+                if(btn) btn.classList.remove('hidden');
+            }
+        };
+
+        // أول تشغيل لعداد الزيارات وإعلان الموقع العام
+        trackSiteVisit();
+        fetchSiteAnnouncement();
     </script>
 </body>
 </html>
