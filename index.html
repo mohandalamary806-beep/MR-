@@ -1220,6 +1220,61 @@
         }
 
         // ================== SEO & IDEAS ==================
+
+        // قاعدة بيانات الألعاب اللي أداة السيو بقت "فاهماها" وبتتعرف عليها جوه أي كلمة مفتاحية،
+        // بنفس عائلة الألعاب الموجودة في مُولد الأفكار عشان الأداتين يكون مستواهم متوازي
+        const GAME_SEO_DB = [
+            { name: "روبلوكس",               tag: "Roblox",              re: /روبلوكس|رولبوكس|roblox/i },
+            { name: "فري فاير",              tag: "FreeFire",            re: /فري ?فاير|free ?fire/i },
+            { name: "ببجي موبايل",           tag: "PUBG",                re: /ببجي|pubg/i },
+            { name: "ماين كرافت",            tag: "Minecraft",           re: /ماين ?كرافت|minecraft/i },
+            { name: "فورت نايت",             tag: "Fortnite",            re: /فورت ?نايت|fortnite/i },
+            { name: "فالورانت",              tag: "Valorant",            re: /فالورانت|valorant/i },
+            { name: "CS:GO 2",               tag: "CSGO2",               re: /كاونتر ?سترايك|سي ?اس ?جو|cs:?go/i },
+            { name: "Call of Duty",          tag: "CallOfDuty",          re: /كول ?أوف ?ديوتي|كول ?اوف ?ديوتي|call ?of ?duty|وارزون|warzone/i },
+            { name: "Apex Legends",          tag: "ApexLegends",         re: /أبيكس|ابيكس|apex/i },
+            { name: "Overwatch 2",           tag: "Overwatch2",          re: /أوفرواتش|اوفرواتش|overwatch/i },
+            { name: "Rainbow Six Siege",     tag: "RainbowSix",          re: /رينبو ?سيكس|rainbow ?six/i },
+            { name: "DOTA 2",                tag: "DOTA2",               re: /دوتا|dota/i },
+            { name: "League of Legends",     tag: "LeagueOfLegends",     re: /ليج ?أوف ?ليجندز|ليج ?اوف ?ليجندز|league ?of ?legends|\blol\b/i },
+            { name: "Mobile Legends",        tag: "MobileLegends",       re: /موبايل ?ليجندز|mobile ?legends|\bmlbb\b/i },
+            { name: "Genshin Impact",        tag: "GenshinImpact",       re: /جينشين|genshin/i },
+            { name: "Honkai: Star Rail",     tag: "HonkaiStarRail",      re: /هونكاي|honkai/i },
+            { name: "Elden Ring",            tag: "EldenRing",           re: /إلدن ?رينج|الدن ?رينج|elden ?ring/i },
+            { name: "Dark Souls",            tag: "DarkSouls",           re: /دارك ?سولز|dark ?souls/i },
+            { name: "Skyrim",                tag: "Skyrim",              re: /سكايريم|skyrim/i },
+            { name: "GTA 5",                 tag: "GTA5",                re: /جاتا|جي ?تي ?ايه|\bgta\b/i },
+            { name: "Red Dead 2",            tag: "RedDead2",            re: /ريد ?ديد|red ?dead/i },
+            { name: "Cyberpunk 2077",        tag: "Cyberpunk2077",       re: /سايبر ?بانك|cyberpunk/i },
+            { name: "The Witcher 3",         tag: "Witcher3",            re: /ويتشر|witcher/i },
+            { name: "Assassin's Creed",      tag: "AssassinsCreed",      re: /أساسنز|اساسنز|assassin/i },
+            { name: "Star Wars Battlefront", tag: "StarWarsBattlefront", re: /باتلفرونت|battlefront/i },
+            { name: "Rust",                  tag: "Rust",                re: /رست|\brust\b/i },
+            { name: "ARK Survival",          tag: "ARKSurvival",         re: /آرك|ارك|\bark\b/i },
+            { name: "DayZ",                  tag: "DayZ",                re: /دايز|dayz/i },
+            { name: "Terraria",              tag: "Terraria",            re: /تيراريا|terraria/i },
+            { name: "Stardew Valley",        tag: "StardewValley",       re: /ستارديو|stardew/i },
+            { name: "The Sims 4",            tag: "TheSims4",            re: /سيمز|the ?sims|\bsims\b/i },
+            { name: "Palworld",              tag: "Palworld",            re: /بالوورلد|palworld/i },
+            { name: "Grounded",              tag: "Grounded",            re: /جراوندد|grounded/i },
+            { name: "No Man's Sky",          tag: "NoMansSky",           re: /نو ?مانز ?سكاي|no ?man'?s ?sky/i },
+            { name: "Starfield",             tag: "Starfield",           re: /ستارفيلد|starfield/i },
+            { name: "Baldur's Gate 3",       tag: "BaldursGate3",        re: /بالدرز ?جيت|baldur'?s ?gate/i },
+            { name: "Hogwarts Legacy",       tag: "HogwartsLegacy",      re: /هوجورتس|هوجوارتس|hogwarts/i },
+            { name: "Alan Wake 2",           tag: "AlanWake2",           re: /ألان ?ويك|الان ?ويك|alan ?wake/i },
+            { name: "Resident Evil 4",       tag: "ResidentEvil4",       re: /ريزدنت ?إيفل|ريزدنت ?ايفل|resident ?evil/i },
+            { name: "Silent Hill",           tag: "SilentHill",          re: /سايلنت ?هيل|silent ?hill/i },
+            { name: "Biohazard Series",      tag: "Biohazard",           re: /بايوهازارد|biohazard/i }
+        ];
+
+        // بتدور جوه الكلمة المفتاحية على أقرب لعبة معروفة متطابقة معاها
+        function detectGameFromKeyword(keyword) {
+            for (const g of GAME_SEO_DB) {
+                if (g.re.test(keyword)) return g;
+            }
+            return null;
+        }
+
         function generateAdvancedTags() {
             const keyword = document.getElementById('keywordInput').value.trim();
             if(!keyword) { showToast('⚠️ اكتب الكلمة المفتاحية أولاً!'); return; }
@@ -1233,7 +1288,10 @@
             const isLongTail = words >= 3;
             const isTooShort = len < 4;
             const hasArabic = /[\u0600-\u06FF]/.test(keyword);
-            const hasGame = /سكربت|كود|ماب|لعبة|بلوكس|رولبوكس|فري فاير|ببجي|ماين كرافت|فورت نايت/i.test(keyword);
+            const matchedGame = detectGameFromKeyword(keyword);
+            const hasGenericGameWord = /سكربت|كود|ماب|لعبة|بلوكس|رولبوكس/i.test(keyword);
+            const hasGame = !!matchedGame || hasGenericGameWord;
+            const hasIntent = /شرح|تجربة|تجربتي|تحدي|مراجعة|اسرار|أسرار|افضل|أفضل|كيفية|طريقة|احتراف/i.test(keyword);
 
             let score = 40;
             let tips = [];
@@ -1242,6 +1300,7 @@
             if(isLongTail) { score += 15; } else { tips.push('📌 الكلمات الطويلة (Long Tail) تحصل على 3x مشاهدات'); }
             if(hasGame)   { score += 15; } else { tips.push('🎮 دمج اسم لعبة مشهورة يرفع الكليكات'); }
             if(hasYear)   { score += 10; } else { tips.push('📅 إضافة السنة ترفع الـ CTR بنسبة 40%'); }
+            if(hasIntent) { score += 10; } else { tips.push('🔍 إضافة كلمة زي "شرح" أو "تجربة" أو "تحدي" بتوضح نية الباحث للسيرش إنجن'); }
             if(hasArabic) score += 5;
             if(score > 100) score = 100;
 
@@ -1249,7 +1308,9 @@
             let scoreLabel = score >= 75 ? '💪 قوي جداً' : score >= 50 ? '🔶 متوسط' : '🔴 ضعيف — يحتاج تحسين';
 
             let verdict = "";
-            if(keyword.includes("سكربت") || keyword.includes("كود")) {
+            if(matchedGame) {
+                verdict = `💡 <b>فكرة للموضوع:</b> الكلمة دي مرتبطة بلعبة <b>${matchedGame.name}</b>! جرب تضيف اسم تحدي أو حدث/تحديث حالي في ${matchedGame.name} جنب العنوان عشان تستهدف بالظبط جمهور اللعبة دي.`;
+            } else if(keyword.includes("سكربت") || keyword.includes("كود")) {
                 verdict = `💡 <b>فكرة للموضوع:</b> ابدأ فيديو الشرح بلقطة أسلوب لعب سريعة تظهر النتيجة النهائية للكود مباشرة.`;
             } else if(keyword.includes("ماب") || keyword.includes("برمجة")) {
                 verdict = `💡 <b>فكرة للموضوع:</b> ننصحك بصناعة مقطع يعتمد على فكرة 'صنعت ماباً بناءً على طلبات المتابعين'.`;
@@ -1274,17 +1335,31 @@
             const list = document.getElementById('tagsList');
             list.innerHTML = "";
             const currentYear = new Date().getFullYear();
-            const baseTags = [
+            let baseTags = [
                 keyword,
                 `${keyword} ${currentYear}`,
                 `أسرار ${keyword}`,
                 `كيفية تشغيل ${keyword}`,
                 `احتراف ${keyword}`,
-                `أفضل ${keyword}`,
-                `#MR_Gaming`,
-                `#رولبوكس_عربي`,
-                `#سكربتات_الجيمرز`
+                `أفضل ${keyword}`
             ];
+
+            // لو الكلمة خاصة بلعبة معروفة، نضيف تاجات ذكية مخصوصة لنفس اللعبة دي
+            if (matchedGame) {
+                baseTags.push(
+                    `شرح ${matchedGame.name}`,
+                    `${matchedGame.name} ${currentYear}`,
+                    `تجربتي مع ${matchedGame.name}`,
+                    `#${matchedGame.tag}`,
+                    `#${matchedGame.tag}_عربي`
+                );
+            }
+
+            baseTags.push(`#MR_Gaming`, `#رولبوكس_عربي`, `#سكربتات_الجيمرز`);
+
+            // إزالة أي تكرار محتمل لو الكلمة المكتوبة أصلاً فيها اسم اللعبة
+            baseTags = [...new Set(baseTags)];
+
             baseTags.forEach(t => {
                 const s = document.createElement('span');
                 const isHashtag = t.startsWith('#');
@@ -1297,30 +1372,90 @@
         }
 
         function copyAllTags() {
-            const kw = document.getElementById('keywordInput').value || "العاب";
-            navigator.clipboard.writeText(`${kw}, اسرار ${kw}, كيفية تشغيل ${kw}, احتراف ${kw}`);
+            const list = document.getElementById('tagsList');
+            const items = list ? Array.from(list.children).map(el => el.innerText).filter(Boolean) : [];
+            if (items.length > 0) {
+                navigator.clipboard.writeText(items.join(', '));
+            } else {
+                const kw = document.getElementById('keywordInput').value || "العاب";
+                navigator.clipboard.writeText(`${kw}, اسرار ${kw}, كيفية تشغيل ${kw}, احتراف ${kw}`);
+            }
             showToast('📋 تم نسخ الكلمات المفتاحية بالكامل!');
         }
 
         function generateAdvancedIdea() {
             const genre = document.getElementById('gameGenre').value;
             const resultDiv = document.getElementById('ideaResult');
+
+            if (!genre) {
+                showToast('⚠️ اختار نوع اللعبة الأول عشان تجيب أفكار مناسبة ليها!');
+                return;
+            }
+
             resultDiv.classList.remove('hidden');
             resultDiv.innerHTML = `<div class="flex items-center gap-2 text-purple-400"><span class="animate-spin text-lg">⏳</span> <span>جاري توليد الأفكار بالذكاء الاصطناعي...</span></div>`;
 
+            // خريطة كاملة لكل لعبة موجودة في القائمة (45 لعبة) بدل أول 6 بس،
+            // عشان أي لعبة يختارها الشخص تاخد اسمها الصحيح بالظبط في البرومبت والأفكار الاحتياطية
             const genreLabels = {
                 roblox_dev: "تطوير وتصميم مابات الألعاب",
                 roblox_script: "مراجعة وتجربة السكربتات المساعدة",
                 freefire: "فري فاير",
-                pubg: "ببجي",
+                pubg: "ببجي موبايل",
                 minecraft: "ماين كرافت",
-                fortnite: "فورت نايت"
+                fortnite: "فورت نايت",
+                valorant: "فالورانت",
+                csgo: "CS:GO 2",
+                call_of_duty: "Call of Duty",
+                apex_legends: "Apex Legends",
+                overwatch: "Overwatch 2",
+                rainbow_six: "Rainbow Six Siege",
+                dota2: "DOTA 2",
+                lol: "League of Legends",
+                mobile_legends: "Mobile Legends",
+                genshin: "Genshin Impact",
+                honkai: "Honkai: Star Rail",
+                elden_ring: "Elden Ring",
+                dark_souls: "Dark Souls",
+                skyrim: "Skyrim",
+                gta: "GTA 5",
+                rdr2: "Red Dead 2",
+                cyberpunk: "Cyberpunk 2077",
+                witcher: "The Witcher 3",
+                assassins: "Assassin's Creed",
+                battlefront: "Star Wars Battlefront",
+                rust: "Rust",
+                ark: "ARK Survival",
+                dayz: "DayZ",
+                terraria: "Terraria",
+                stardew: "Stardew Valley",
+                sims: "The Sims 4",
+                minecraft_survival: "Minecraft Survival",
+                palworld: "Palworld",
+                grounded: "Grounded",
+                no_mans_sky: "No Man's Sky",
+                starfield: "Starfield",
+                baldurs_gate: "Baldur's Gate 3",
+                hogwarts: "Hogwarts Legacy",
+                alan_wake: "Alan Wake 2",
+                resident_evil: "Resident Evil 4",
+                silent_hill: "Silent Hill",
+                biohazard: "Biohazard Series",
+                horror_general: "أفلام ومحتوى رعب عام",
+                streaming_content: "محتوى Streaming عام"
             };
             const genreLabel = genreLabels[genre] || genre;
 
-            const prompt = `أنت خبير محتوى يوتيوب للجيمرز العرب. اقترح 25 فكرة فيديو إبداعية ومتنوعة وحصرية وجاهزة للتطبيق مباشرة لقناة جيمينج تخص: "${genreLabel}".
-            كل فكرة يجب أن تكون محددة وسهلة التطبيق وجذابة للمشاهدين.
-            الرد بالعربي فقط. كل فكرة في سطر واحد، بدون ترقيم، بصيغة تحفيزية.`;
+            const prompt = `أنت خبير محتوى يوتيوب وتيك توك متخصص في الجيمنج للجمهور العربي، وعندك خبرة كبيرة في الترندات والتحديات الفيروسية.
+اقترح 25 فكرة فيديو إبداعية ومتنوعة وحصرية وجاهزة للتطبيق مباشرة، خاصة بلعبة أو محتوى: "${genreLabel}".
+
+شروط مهمة لازم تتحقق في كل الأفكار:
+- نوّع بين أنواع مختلفة: تحديات، تجارب غريبة، مقارنات، أسرار وخبايا، ستوري تايم، سبيدران، وريأكشن.
+- كل فكرة لازم تكون مرتبطة فعلياً بطبيعة "${genreLabel}" تحديداً، مش فكرة عامة ممكن تتطبق على أي لعبة تانية.
+- كل فكرة محددة وواضحة وسهلة التنفيذ وتجذب المشاهد من أول العنوان.
+- من غير تكرار لنفس الفكرة بصيغ مختلفة.
+
+الرد بالعربي فقط، كل فكرة في سطر واحد، من غير ترقيم أو نقط، بصيغة حماسية وجذابة.`;
 
             // استخدام Claude API للتوليد (للإنتاج فقط - في الـ demo استخدم fallback)
             fetch("https://api.anthropic.com/v1/messages", {
@@ -1330,8 +1465,8 @@
                     "Authorization": "Bearer YOUR_CLAUDE_API_KEY" // استبدل بـ API Key الحقيقي
                 },
                 body: JSON.stringify({
-                    model: "claude-opus-4-6",
-                    max_tokens: 2000,
+                    model: "claude-sonnet-5",
+                    max_tokens: 3000,
                     messages: [{ role: "user", content: prompt }]
                 })
             })
@@ -1880,7 +2015,7 @@
 أنهيت كل الـ DLC والـ Side Missions 📦
 استكشفت كل الـ Locations 🗺️
 وصلت لـ S Rank في كل المستويات ⭐`,
-                "horror_general": `صنعت أخوف فيديو رعب على الإنترنت 😱
+                "أفلام ومحتوى رعب عام": `صنعت أخوف فيديو رعب على الإنترنت 😱
 استخدمت كل تقنيات الرعب النفسي 🧠
 فزت بـ كل تحديات الخوف 💀
 جمعت أفضل قصص الرعب الحقيقية 📖
@@ -1890,7 +2025,7 @@
 أنهيت كل الـ Horror Experiences 👻
 جعلت الناس تخاف من الظلام 🌑
 وصلت لـ Legendary Horror Creator Status 👑`,
-                "streaming_content": `وصلت لـ 1 مليون متابع 👑
+                "محتوى Streaming عام": `وصلت لـ 1 مليون متابع 👑
 حطمت الرقم القياسي للـ Concurrent Viewers 📊
 استخدمت كل الـ Streaming Platforms 📱
 فزت بـ كل الـ Gaming Tournaments 🏆
@@ -1901,7 +2036,42 @@
 وصلت لـ Legendary Streamer Status ⭐
 احتفلت مع 1 مليون شخص 🎉`
             };
-            return ideas[genre] || ideas["تطوير وتصميم مابات الألعاب"];
+
+            // بنجمع الأفكار الجاهزة الخاصة باللعبة + أفكار ذكية بتتولد ديناميكياً باسم نفس اللعبة،
+            // وبعدين بنخلط الترتيب عشان كل ضغطة على "توليد أفكار جديدة" تحس إنها فعلاً مختلفة ومتجددة
+            const basePool = (ideas[genre] || ideas["تطوير وتصميم مابات الألعاب"])
+                .split("\n")
+                .filter(l => l.trim());
+            const dynamicPool = buildDynamicIdeas(genre);
+            const combinedPool = shuffleIdeasArray(basePool.concat(dynamicPool));
+            return combinedPool.join("\n");
+        }
+
+        // خلط عشوائي (Fisher-Yates) لمصفوفة الأفكار من غير ما نلمس أو نحذف أي فكرة من الأصل
+        function shuffleIdeasArray(arr) {
+            const copy = arr.slice();
+            for (let i = copy.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [copy[i], copy[j]] = [copy[j], copy[i]];
+            }
+            return copy;
+        }
+
+        // أفكار ذكية إضافية بتتولد ديناميكياً حسب اسم اللعبة المختارة بالظبط،
+        // بتتضاف فوق الأفكار الجاهزة عشان تزود التنوع وتحس إن المولد بيفكر فعلاً
+        function buildDynamicIdeas(genreLabel) {
+            return [
+                `قارنت بين ${genreLabel} والإصدار القديم بنفس التحدي بالظبط 🔄`,
+                `جربت أغرب طلب وصلني من المتابعين في ${genreLabel} 🎲`,
+                `عملت سبيدران كامل في ${genreLabel} لأول مرة في حياتي ⏱️`,
+                `رديت لايف على أغرب كومنت شفته عن ${genreLabel} 😅`,
+                `جربت ${genreLabel} 24 ساعة متواصلة من غير ما أوقف ⏳`,
+                `كشفت سر محدش يعرفه عن ${genreLabel} 🕵️`,
+                `لعبت ${genreLabel} بقاعدة واحدة غريبة طول الفيديو 🎯`,
+                `رتبت أقوى 5 لحظات حصلت معايا في ${genreLabel} 🏅`,
+                `جاوبت على أسئلة المتابعين عن ${genreLabel} لايف 🎤`,
+                `قارنت تجربتي قبل وبعد ما احترفت ${genreLabel} 📈`
+            ];
         }
 
         // ================== MODAL HELPERS ==================
