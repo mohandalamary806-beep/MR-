@@ -432,6 +432,28 @@
         </div>
     </div>
 
+    <!-- ================== Firebase (مزامنة حقيقية لكل الزوار) ================== -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCQdprjl67J6xQ-hssegcPCr2fSZgUqz4k",
+            authDomain: "mr-gaming-24803.firebaseapp.com",
+            projectId: "mr-gaming-24803",
+            storageBucket: "mr-gaming-24803.firebasestorage.app",
+            messagingSenderId: "443646227114",
+            appId: "1:443646227114:web:788aaa68488c085ced96d3",
+            measurementId: "G-ZY739GTMEG"
+        };
+
+        const fbApp = initializeApp(firebaseConfig);
+        const db = getFirestore(fbApp);
+
+        // نعرّض أدوات Firestore على window عشان الكود الأساسي (غير module) يقدر يستخدمها
+        window.mrgFirebase = { db, doc, setDoc, getDoc, onSnapshot };
+    </script>
+
     <script>
         // ================== CONFIGURATION ==================
         const GOOGLE_CLIENT_ID = "443646227114-vbstcio2leo5l5ene86mtmd9cv6djdln.apps.googleusercontent.com";
@@ -487,74 +509,110 @@
             fetchDataFromServer();
         }
 
-        // ================== SERVER SYNC ==================
+        // ================== SERVER SYNC (Firebase Firestore) ==================
+        // كل تعليق أو لايك أو سكربت بيترفع هنا، فبيظهر لكل زوار الموقع فورًا (مش بس عند صاحبه)
         function syncDataToServer() {
-            // إرسال البيانات للخادم
-            fetch(`${API_BASE_URL}/api/sync-data`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': currentUser ? `Bearer ${currentUser.token}` : 'Bearer anonymous'
-                },
-                body: JSON.stringify({
-                    scripts: scriptsArray,
-                    comments: commentsArray,
-                    reports: adminReports,
-                    userId: currentUser ? currentUser.id : null,
-                    timestamp: new Date().toISOString()
-                })
-            })
-            .then(res => res.json())
-            .then(data => {
-                if(data.success) {
-                    console.log('✅ تم حفظ البيانات على الخادم');
-                } else {
-                    console.error('❌ فشل الحفظ:', data.message);
-                    showToast('⚠️ تحذير: لم يتم الحفظ على الخادم، سيتم المحاولة لاحقاً');
-                }
-            })
-            .catch(err => {
-                console.error('❌ خطأ في الاتصال بالخادم:', err);
-                showToast('⚠️ خطأ في الاتصال بالخادم');
+            if(!window.mrgFirebase) {
+                console.error('❌ Firebase لسه مش جاهز');
+                return;
+            }
+            const { db, doc, setDoc } = window.mrgFirebase;
+
+            setDoc(doc(db, "mrg_site", "scripts"), {
+                list: scriptsArray,
+                updatedAt: new Date().toISOString()
+            }).then(() => {
+                console.log('✅ تم حفظ السكربتات على Firebase لكل الزوار');
+            }).catch(err => {
+                console.error('❌ فشل حفظ السكربتات على Firebase:', err);
+                showToast('⚠️ تعذّر حفظ السكربتات على الخادم، حاول مرة أخرى');
+            });
+
+            setDoc(doc(db, "mrg_site", "comments"), {
+                list: commentsArray,
+                updatedAt: new Date().toISOString()
+            }).then(() => {
+                console.log('✅ تم حفظ التعليقات على Firebase لكل الزوار');
+            }).catch(err => {
+                console.error('❌ فشل حفظ التعليقات على Firebase:', err);
+                showToast('⚠️ تعذّر حفظ التعليقات على الخادم، حاول مرة أخرى');
+            });
+
+            // البلاغات تتسجل لكل المستخدمين، لكن بتتعرض بس للأدمن في الواجهة
+            setDoc(doc(db, "mrg_site", "reports"), {
+                list: adminReports,
+                updatedAt: new Date().toISOString()
+            }).catch(err => {
+                console.error('❌ فشل حفظ البلاغات على Firebase:', err);
             });
         }
 
         function fetchDataFromServer() {
-            // جلب أحدث البيانات من الخادم
-            fetch(`${API_BASE_URL}/api/fetch-data`, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': currentUser ? `Bearer ${currentUser.token}` : 'Bearer anonymous'
+            if(!window.mrgFirebase) {
+                // Firebase لسه بيتحمّل، حاول تاني بعد لحظة بسيطة
+                setTimeout(fetchDataFromServer, 300);
+                return;
+            }
+            const { db, doc, getDoc } = window.mrgFirebase;
+
+            Promise.all([
+                getDoc(doc(db, "mrg_site", "scripts")),
+                getDoc(doc(db, "mrg_site", "comments")),
+                getDoc(doc(db, "mrg_site", "reports"))
+            ]).then(([scriptsSnap, commentsSnap, reportsSnap]) => {
+                if(scriptsSnap.exists() && Array.isArray(scriptsSnap.data().list)) {
+                    scriptsArray = scriptsSnap.data().list;
                 }
-            })
-            .then(res => res.json())
-            .then(data => {
-                if(data.success) {
-                    // تحديث البيانات من الخادم
-                    if(data.scripts) scriptsArray = data.scripts;
-                    if(data.comments) commentsArray = data.comments;
-                    if(data.reports && currentUser) adminReports = data.reports;
-                    
-                    console.log('✅ تم تحديث البيانات من الخادم');
-                    renderScripts();
-                    renderComments();
-                } else {
-                    console.error('❌ فشل جلب البيانات:', data.message);
+                if(commentsSnap.exists() && Array.isArray(commentsSnap.data().list)) {
+                    commentsArray = commentsSnap.data().list;
                 }
-            })
-            .catch(err => {
-                console.error('❌ خطأ في جلب البيانات من الخادم:', err);
+                if(reportsSnap.exists() && Array.isArray(reportsSnap.data().list)) {
+                    adminReports = reportsSnap.data().list;
+                }
+                console.log('✅ تم تحديث البيانات من Firebase');
+                renderScripts();
+                renderComments();
+                // أول مرة نجيب فيها البيانات، نبدأ الاستماع الفوري لأي تحديث جديد من أي زائر
+                startRealtimeSync();
+            }).catch(err => {
+                console.error('❌ خطأ في جلب البيانات من Firebase:', err);
                 // استخدم البيانات المحلية كـ fallback
+                startRealtimeSync();
             });
         }
 
-        // ================== REAL-TIME POLLING ==================
+        // ================== REAL-TIME LISTENERS (Firestore onSnapshot) ==================
+        // بدل عمل polling كل كام ثانية، بنستخدم استماع فوري حقيقي: أي تعليق/لايك/سكربت
+        // من أي حد، بيوصل لباقي الزوار أوتوماتيك من غير ما حد يعمل refresh
+        let mrgListenersStarted = false;
         function startRealtimeSync() {
-            // تحديث البيانات كل 3 ثوان لتحديث فوري
-            setInterval(() => {
-                fetchDataFromServer();
-            }, 3000);
+            if(mrgListenersStarted || !window.mrgFirebase) return;
+            mrgListenersStarted = true;
+            const { db, doc, onSnapshot } = window.mrgFirebase;
+
+            onSnapshot(doc(db, "mrg_site", "scripts"), snap => {
+                if(snap.exists() && Array.isArray(snap.data().list)) {
+                    scriptsArray = snap.data().list;
+                    renderScripts();
+                }
+            }, err => console.error('❌ خطأ في مزامنة السكربتات الفورية:', err));
+
+            onSnapshot(doc(db, "mrg_site", "comments"), snap => {
+                if(snap.exists() && Array.isArray(snap.data().list)) {
+                    commentsArray = snap.data().list;
+                    renderComments();
+                }
+            }, err => console.error('❌ خطأ في مزامنة التعليقات الفورية:', err));
+
+            onSnapshot(doc(db, "mrg_site", "reports"), snap => {
+                if(snap.exists() && Array.isArray(snap.data().list)) {
+                    adminReports = snap.data().list;
+                    const adminTab = document.getElementById('admin-reports');
+                    if(adminTab && adminTab.classList.contains('active') && typeof renderAdminReports === 'function') {
+                        renderAdminReports();
+                    }
+                }
+            }, err => console.error('❌ خطأ في مزامنة البلاغات الفورية:', err));
         }
 
         function saveAuthToken(token) {
@@ -1882,12 +1940,8 @@
                 renderScripts();
                 renderComments();
             }
-            
-            // تحديث البيانات كل 5 ثوانٍ للتحقق من التحديثات (محاكاة الـ real-time)
-            setInterval(() => {
-                // في الإنتاج: اطلب البيانات من الخادم
-                // لكن الآن سنحفظ فقط على localStorage
-            }, 5000);
+            // ملاحظة: المزامنة الفورية مع باقي الزوار بتتشغل أوتوماتيك جوه fetchDataFromServer()
+            // (اللي بتتنادى من جوه loadData()) عن طريق Firebase Firestore realtime listeners.
         };
     </script>
 </body>
