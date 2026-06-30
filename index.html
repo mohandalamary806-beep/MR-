@@ -2945,5 +2945,371 @@
         trackSiteVisit();
         fetchSiteAnnouncement();
     </script>
+    <!-- ============================================================
+         إضافة جديدة فقط: زرار "الملف الشخصي" جنب زرار "خروج"، وقائمة
+         منبثقة (Modal) كاملة لتعديل صورة البروفايل والاسم واختيار لون
+         مميز للحساب، مع إحصائيات بسيطة عن نشاط المستخدم في الموقع.
+         (مفيش أي سطر اتغير أو اتحذف من أي كود فوق - سواء الكود الأصلي
+         أو أي إضافة قبل كده - ده كله كود مُضاف بالكامل في الآخر فقط)
+    ============================================================ -->
+    <div id="profileModal" class="modal-overlay" onclick="closeModal('profileModal', event)">
+        <div class="modal-box" style="max-width:440px;">
+            <div class="flex justify-between items-center mb-5">
+                <h3 class="text-lg font-black text-purple-400">👤 الملف الشخصي</h3>
+                <button onclick="closeModalDirect('profileModal')" class="text-gray-500 hover:text-white text-xl leading-none">✕</button>
+            </div>
+
+            <!-- معاينة حية: الشكل اللي هيظهر بيه المستخدم في الموقع -->
+            <div class="flex flex-col items-center mb-5">
+                <div class="relative" style="width:96px;height:96px;">
+                    <img id="profileAvatarPreview" src="" alt="صورة البروفايل"
+                         class="w-24 h-24 rounded-full object-cover border-4"
+                         style="border-color:#a855f7;">
+                    <button type="button" onclick="document.getElementById('profilePhotoInput').click()"
+                            title="تغيير الصورة"
+                            class="absolute bottom-0 left-0 w-8 h-8 rounded-full bg-purple-600 border-2 border-slate-900 flex items-center justify-center text-sm hover:bg-purple-500 transition">📷</button>
+                    <input type="file" id="profilePhotoInput" accept="image/*" class="hidden" onchange="onProfilePhotoFileSelected(this)">
+                </div>
+                <p class="text-[10px] text-gray-500 mt-2">دوس على أيقونة الكاميرا لتغيير الصورة (jpg, png)</p>
+                <div id="profileStatsDisplay" class="flex flex-wrap justify-center gap-x-3 gap-y-1 mt-3 text-[11px] text-gray-400"></div>
+            </div>
+
+            <div class="border-t border-slate-800 pt-4 space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-gray-400 mb-2">✏️ الاسم اللي هيظهر للكل</label>
+                    <input type="text" id="profileNameInput" maxlength="30"
+                           class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-white text-sm mb-1 focus:outline-none focus:border-purple-500 text-right"
+                           placeholder="اكتب اسمك هنا...">
+                    <p id="profileEmailDisplay" class="text-[10px] text-gray-600"></p>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-gray-400 mb-2">🎨 اختار لون مميز لحسابك</label>
+                    <div class="flex gap-2 flex-wrap">
+                        <button type="button" data-color="#a855f7" onclick="selectAccentColor('#a855f7')" class="accent-swatch-btn w-8 h-8 rounded-full transition" style="background:#a855f7;"></button>
+                        <button type="button" data-color="#f43f5e" onclick="selectAccentColor('#f43f5e')" class="accent-swatch-btn w-8 h-8 rounded-full transition" style="background:#f43f5e;"></button>
+                        <button type="button" data-color="#3b82f6" onclick="selectAccentColor('#3b82f6')" class="accent-swatch-btn w-8 h-8 rounded-full transition" style="background:#3b82f6;"></button>
+                        <button type="button" data-color="#10b981" onclick="selectAccentColor('#10b981')" class="accent-swatch-btn w-8 h-8 rounded-full transition" style="background:#10b981;"></button>
+                        <button type="button" data-color="#f59e0b" onclick="selectAccentColor('#f59e0b')" class="accent-swatch-btn w-8 h-8 rounded-full transition" style="background:#f59e0b;"></button>
+                        <button type="button" data-color="#06b6d4" onclick="selectAccentColor('#06b6d4')" class="accent-swatch-btn w-8 h-8 rounded-full transition" style="background:#06b6d4;"></button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex gap-2 justify-end mt-6">
+                <button onclick="closeModalDirect('profileModal')" class="px-4 py-2 rounded-xl bg-slate-800 text-gray-400 hover:text-white text-xs transition">إلغاء</button>
+                <button onclick="saveProfileChanges()" class="px-5 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-fuchsia-600 text-white font-bold text-xs shadow-lg hover:opacity-90 transition">💾 حفظ التغييرات</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================================
+        // إضافة جديدة فقط: منطق "الملف الشخصي" بالكامل (تغيير الصورة،
+        // تغيير الاسم، اختيار لون مميز، إحصائيات بسيطة، ومزامنة الصورة
+        // والاسم عبر الأجهزة المختلفة باستخدام Firebase). كل ده كود
+        // مُضاف من الآخر بس، ومفيش أي فنكشن أو سطر قديم اتلمس أو اتحذف؛
+        // أي فنكشن قديم محتاجينه بنعمله "wrap" بنفس فكرة باقي الإضافات
+        // الموجودة فوق بالظبط (زي إضافة لوحة تحكم الإدارة وزرار تعديل
+        // الاسم)، يعني بننده عليه الأول زي ما هو بالظبط وبعدين نضيف.
+        // ============================================================
+
+        var pendingProfilePhotoDataUrl = null;
+        var pendingAccentColor = null;
+        var profileFirestoreSynced = false;
+
+        // ---------- أدوات مساعدة ----------
+        function getAccentColorForCurrentUser() {
+            if (!currentUser) return '#a855f7';
+            return localStorage.getItem('mrg_accent_color_' + currentUser.id) || '#a855f7';
+        }
+
+        function highlightAccentSwatch(color) {
+            document.querySelectorAll('.accent-swatch-btn').forEach(function (btn) {
+                if (btn.getAttribute('data-color') === color) {
+                    btn.style.outline = '2px solid #fff';
+                    btn.style.outlineOffset = '2px';
+                } else {
+                    btn.style.outline = 'none';
+                }
+            });
+        }
+
+        function computeUserStats() {
+            var scriptsCount = 0, commentsCount = 0;
+            if (currentUser) {
+                scriptsArray.forEach(function (s) { if (s.userId === currentUser.id) scriptsCount++; });
+                commentsArray.forEach(function (c) {
+                    if (c.userId === currentUser.id) commentsCount++;
+                    if (c.replies) {
+                        c.replies.forEach(function (r) { if (r.userId === currentUser.id) commentsCount++; });
+                    }
+                });
+            }
+            return { scripts: scriptsCount, comments: commentsCount };
+        }
+
+        // بتاخد ملف صورة، تعمله Resize وCrop مربّع (256×256) وضغط، وترجع رابط Base64 جاهز للحفظ والعرض
+        function resizeImageToDataUrl(file, callback) {
+            if (!file) return;
+            if (!file.type || file.type.indexOf('image/') !== 0) {
+                showToast('⚠️ من فضلك اختار ملف صورة بصيغة صحيحة (jpg, png, webp)');
+                return;
+            }
+            if (file.size > 8 * 1024 * 1024) {
+                showToast('⚠️ حجم الصورة كبير، اختار صورة أصغر من 8 ميجا');
+                return;
+            }
+            var reader = new FileReader();
+            reader.onload = function (e) {
+                var img = new Image();
+                img.onload = function () {
+                    var size = 256;
+                    var canvas = document.createElement('canvas');
+                    canvas.width = size;
+                    canvas.height = size;
+                    var ctx = canvas.getContext('2d');
+                    var srcSize = Math.min(img.width, img.height);
+                    var sx = (img.width - srcSize) / 2;
+                    var sy = (img.height - srcSize) / 2;
+                    ctx.drawImage(img, sx, sy, srcSize, srcSize, 0, 0, size, size);
+                    callback(canvas.toDataURL('image/jpeg', 0.85));
+                };
+                img.onerror = function () { showToast('⚠️ تعذّر قراءة الصورة، جرّب صورة تانية'); };
+                img.src = e.target.result;
+            };
+            reader.onerror = function () { showToast('⚠️ حصل خطأ أثناء قراءة الملف'); };
+            reader.readAsDataURL(file);
+        }
+
+        // ---------- تطبيق الصورة المحفوظة محلياً + تسجيل أول ظهور للمستخدم على الجهاز ده ----------
+        function applyStoredProfileOverridesToCurrentUser() {
+            if (!currentUser || !currentUser.id) return;
+            var savedPhoto = localStorage.getItem('mrg_custom_photo_' + currentUser.id);
+            if (savedPhoto) currentUser.picture = savedPhoto;
+
+            var memberSinceKey = 'mrg_member_since_' + currentUser.id;
+            if (!localStorage.getItem(memberSinceKey)) {
+                localStorage.setItem(memberSinceKey, new Date().toISOString());
+            }
+        }
+
+        function applyAccentColorToNavAvatar() {
+            var authZone = document.getElementById('auth-zone');
+            if (!authZone) return;
+            var img = authZone.querySelector('img');
+            if (!img) return;
+            var color = getAccentColorForCurrentUser();
+            img.style.borderColor = color;
+            img.style.boxShadow = '0 0 8px ' + color + '99';
+        }
+
+        // ---------- زرار "الملف الشخصي" جنب زرار الخروج ----------
+        function addProfileMenuButton() {
+            var authZone = document.getElementById('auth-zone');
+            if (!authZone) return;
+
+            var oldBtn = document.getElementById('openProfileBtn');
+            if (oldBtn) oldBtn.remove();
+
+            var logoutBtn = authZone.querySelector('button[onclick="logoutUser()"]');
+            if (!logoutBtn) return;
+
+            var profileBtn = document.createElement('button');
+            profileBtn.id = 'openProfileBtn';
+            profileBtn.textContent = '👤 الملف الشخصي';
+            profileBtn.className = 'text-cyan-400 underline ml-2 hover:text-cyan-300';
+            profileBtn.onclick = openProfileModal;
+
+            logoutBtn.insertAdjacentElement('beforebegin', profileBtn);
+        }
+
+        // ---------- فتح نافذة الملف الشخصي وتعبئتها بالبيانات الحالية ----------
+        function openProfileModal() {
+            if (!currentUser) return;
+            pendingProfilePhotoDataUrl = null;
+            pendingAccentColor = getAccentColorForCurrentUser();
+
+            var avatarPreview = document.getElementById('profileAvatarPreview');
+            if (avatarPreview) {
+                avatarPreview.src = currentUser.picture;
+                avatarPreview.style.borderColor = pendingAccentColor;
+            }
+            var nameInput = document.getElementById('profileNameInput');
+            if (nameInput) nameInput.value = currentUser.name || '';
+
+            var emailEl = document.getElementById('profileEmailDisplay');
+            if (emailEl) emailEl.textContent = currentUser.email || '';
+
+            highlightAccentSwatch(pendingAccentColor);
+
+            var stats = computeUserStats();
+            var statsEl = document.getElementById('profileStatsDisplay');
+            if (statsEl) {
+                var memberSince = localStorage.getItem('mrg_member_since_' + currentUser.id);
+                var memberSinceLabel = '—';
+                if (memberSince) {
+                    var d = new Date(memberSince);
+                    memberSinceLabel = d.toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' });
+                }
+                statsEl.innerHTML =
+                    '<span>📜 ' + stats.scripts + ' سكربت</span>' +
+                    '<span>💬 ' + stats.comments + ' تعليق</span>' +
+                    '<span>🗓️ عضو من ' + memberSinceLabel + '</span>';
+            }
+
+            var modal = document.getElementById('profileModal');
+            if (modal) modal.classList.add('open');
+        }
+
+        function selectAccentColor(color) {
+            pendingAccentColor = color;
+            highlightAccentSwatch(color);
+            var avatarPreview = document.getElementById('profileAvatarPreview');
+            if (avatarPreview) avatarPreview.style.borderColor = color;
+        }
+
+        function onProfilePhotoFileSelected(input) {
+            var file = input.files && input.files[0];
+            if (!file) return;
+            resizeImageToDataUrl(file, function (dataUrl) {
+                pendingProfilePhotoDataUrl = dataUrl;
+                var avatarPreview = document.getElementById('profileAvatarPreview');
+                if (avatarPreview) avatarPreview.src = dataUrl;
+                showToast('🖼️ تم اختيار الصورة، دوس "حفظ التغييرات" عشان تتفعّل');
+            });
+            input.value = '';
+        }
+
+        // ---------- حفظ التعديلات (صورة + اسم + لون) ----------
+        function saveProfileChanges() {
+            if (!currentUser) return;
+
+            var nameInput = document.getElementById('profileNameInput');
+            var newName = nameInput ? sanitizeDisplayName(nameInput.value.trim()).slice(0, 30) : '';
+            var nameChanged = !!(newName && newName !== currentUser.name);
+
+            // نفس قاعدة الـ 7 أيام المستخدمة في زرار "تعديل الاسم" الأصلي، عشان نفضل متوافقين معاه
+            if (nameChanged) {
+                var lastChangedKey = 'mrg_custom_name_changed_at_' + currentUser.id;
+                var lastChanged = localStorage.getItem(lastChangedKey);
+                var sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
+                if (lastChanged) {
+                    var elapsedMs = Date.now() - parseInt(lastChanged, 10);
+                    if (elapsedMs < sevenDaysMs) {
+                        var remainingDays = Math.ceil((sevenDaysMs - elapsedMs) / (24 * 60 * 60 * 1000));
+                        showToast('⏳ تقدر تغيّر اسمك تاني بعد ' + remainingDays + ' يوم (الصورة واللون اتحفظوا عادي)');
+                        nameChanged = false;
+                    }
+                }
+            }
+
+            if (nameChanged) {
+                currentUser.name = newName;
+                localStorage.setItem('mrg_custom_name_' + currentUser.id, newName);
+                localStorage.setItem('mrg_custom_name_changed_at_' + currentUser.id, Date.now().toString());
+            }
+
+            if (pendingProfilePhotoDataUrl) {
+                currentUser.picture = pendingProfilePhotoDataUrl;
+                localStorage.setItem('mrg_custom_photo_' + currentUser.id, pendingProfilePhotoDataUrl);
+            }
+
+            if (pendingAccentColor) {
+                localStorage.setItem('mrg_accent_color_' + currentUser.id, pendingAccentColor);
+            }
+
+            saveUser(currentUser);
+            applyLoggedInUI();
+            renderComments();
+            syncProfileToFirestore();
+            closeModalDirect('profileModal');
+            showToast('✅ تم حفظ ملفك الشخصي بنجاح');
+        }
+
+        // ---------- مزامنة الصورة/الاسم/اللون مع Firebase عشان تظهر لو دخل من جهاز تاني ----------
+        function syncProfileToFirestore() {
+            if (!window.mrgFirebase || !currentUser) return;
+            var { db, doc, setDoc } = window.mrgFirebase;
+            setDoc(doc(db, "mrg_profiles", String(currentUser.id)), {
+                name: currentUser.name,
+                photo: currentUser.picture,
+                accentColor: getAccentColorForCurrentUser(),
+                updatedAt: new Date().toISOString()
+            }).catch(function (err) {
+                console.error('❌ فشل مزامنة الملف الشخصي على Firebase:', err);
+            });
+        }
+
+        function syncProfileFromFirestoreOnce() {
+            if (profileFirestoreSynced || !currentUser || !window.mrgFirebase) return;
+            profileFirestoreSynced = true;
+            var { db, doc, getDoc } = window.mrgFirebase;
+            getDoc(doc(db, "mrg_profiles", String(currentUser.id))).then(function (snap) {
+                if (!snap.exists() || !currentUser) return;
+                var data = snap.data();
+                var changed = false;
+                if (data.photo && data.photo !== currentUser.picture) {
+                    currentUser.picture = data.photo;
+                    localStorage.setItem('mrg_custom_photo_' + currentUser.id, data.photo);
+                    changed = true;
+                }
+                if (data.accentColor) {
+                    localStorage.setItem('mrg_accent_color_' + currentUser.id, data.accentColor);
+                    changed = true;
+                }
+                if (data.name && data.name !== currentUser.name) {
+                    currentUser.name = data.name;
+                    localStorage.setItem('mrg_custom_name_' + currentUser.id, data.name);
+                    changed = true;
+                }
+                if (changed) {
+                    saveUser(currentUser);
+                    applyLoggedInUI();
+                    renderComments();
+                }
+            }).catch(function (err) {
+                console.error('❌ فشل تحميل الملف الشخصي من Firebase:', err);
+            });
+        }
+
+        // ---------- إظهار صورة المستخدم الحقيقية جنب تعليقاته هو بس (بدل الحرف الافتراضي) ----------
+        function applyOwnAvatarToComments() {
+            if (!currentUser) return;
+            var container = document.getElementById('commentsContainer');
+            if (!container) return;
+            var children = container.children;
+            for (var i = 0; i < children.length && i < commentsArray.length; i++) {
+                if (commentsArray[i].userId === currentUser.id) {
+                    var avatarSlot = children[i].querySelector('.w-9.h-9.rounded-full.bg-purple-600');
+                    if (avatarSlot) {
+                        var img = document.createElement('img');
+                        img.src = currentUser.picture;
+                        img.alt = currentUser.name;
+                        img.className = 'w-9 h-9 rounded-full object-cover border-2 shrink-0';
+                        img.style.borderColor = getAccentColorForCurrentUser();
+                        avatarSlot.replaceWith(img);
+                    }
+                }
+            }
+        }
+
+        // ---------- لف الفنكشنز القديمة (Wrap) من غير ما نلمسها زي باقي الإضافات بالظبط ----------
+        var originalApplyLoggedInUI_profileWrap = applyLoggedInUI;
+        applyLoggedInUI = function () {
+            applyStoredProfileOverridesToCurrentUser();
+            originalApplyLoggedInUI_profileWrap();
+            addProfileMenuButton();
+            applyAccentColorToNavAvatar();
+            syncProfileFromFirestoreOnce();
+        };
+
+        var originalRenderComments_profileWrap = renderComments;
+        renderComments = function () {
+            originalRenderComments_profileWrap();
+            applyOwnAvatarToComments();
+        };
+    </script>
+
 </body>
 </html>
