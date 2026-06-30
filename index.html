@@ -13,11 +13,6 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&display=swap" rel="stylesheet">
     
-    <!-- Firebase SDK للـ Real-time Database ✨ -->
-    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js"></script>
-    
     <style>
         *, *::before, *::after { box-sizing: border-box; }
         body {
@@ -110,26 +105,6 @@
         }
         #toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
 
-        /* Firebase Status Indicator ✨ */
-        .firebase-status {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            background: #ef4444;
-            animation: pulse 2s infinite;
-            z-index: 1000;
-        }
-        .firebase-status.connected {
-            background: #10b981;
-        }
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-
         /* Google Sign-In Customization */
         #g_id_onload {
             display: none;
@@ -142,9 +117,6 @@
 <body class="text-gray-100 min-h-screen relative selection:bg-purple-600 selection:text-white">
 
     <div class="glow-sphere"></div>
-    
-    <!-- Firebase Status Indicator -->
-    <div id="firebaseStatus" class="firebase-status" title="Firebase Connection Status"></div>
 
     <!-- Navigation Bar -->
     <nav class="bg-slate-950/90 backdrop-blur-md border-b border-purple-950/60 p-4 sticky top-0 z-50">
@@ -174,7 +146,7 @@
     <!-- Header -->
     <header class="text-center py-12 px-4 max-w-4xl mx-auto">
         <span class="text-xs uppercase tracking-widest text-purple-400 font-bold bg-purple-950/40 px-4 py-1.5 rounded-full border border-purple-900/50 mb-3 inline-block">
-            نسخة الإنتاج V5 PRO + Firebase Real-time ✨
+            نسخة الإنتاج V5 PRO
         </span>
         <h2 class="text-4xl md:text-5xl font-black mb-4 leading-tight">
             المكان الأول لتظبيط ومشاركة السكربتات
@@ -332,7 +304,7 @@
     </div>
 
     <footer class="text-center py-6 text-xs text-gray-600 bg-slate-950 border-t border-slate-900 mt-12">
-        <p>© 2026 MR جيمنج | كافة الحقوق محفوظة. ✨ مدعومة بـ Firebase Real-time Database</p>
+        <p>© 2026 MR جيمنج | كافة الحقوق محفوظة.</p>
     </footer>
 
     <!-- ===== Toast ===== -->
@@ -461,36 +433,17 @@
     </div>
 
     <script>
-        // ================== FIREBASE CONFIGURATION + ALL OLD CODE ==================
-        const firebaseConfig = {
-            apiKey: "AIzaSyCQdprjl67J6xQ-hssegcPCr2fSZgUqz4k",
-            authDomain: "mr-gaming-24803.firebaseapp.com",
-            projectId: "mr-gaming-24803",
-            storageBucket: "mr-gaming-24803.firebasestorage.app",
-            messagingSenderId: "443646227114",
-            appId: "1:443646227114:web:788aaa68488c085ced96d3",
-            measurementId: "G-ZY739GTMEG",
-            databaseURL: "https://mr-gaming-24803-default-rtdb.europe-west1.firebasedatabase.app"
-        };
-
-        // Initialize Firebase
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
-        const auth = firebase.auth();
-
         // ================== CONFIGURATION ==================
         const GOOGLE_CLIENT_ID = "443646227114-vbstcio2leo5l5ene86mtmd9cv6djdln.apps.googleusercontent.com";
         const API_BASE_URL = "mr-gaming-24803";
         
         let currentUser = null;
         let selectedReplyCommentId = null;
-        let isFirebaseReady = false;
-        let firebaseListenersActive = false;
 
         // ================== DEFAULT DATA ==================
         const DEFAULT_SCRIPTS = [
             { id: 101, title: "سكربت التجميع التلقائي الفائق | Blox Fruits", code: "loadstring(game:HttpGet('https://raw.githubusercontent.com/Example/Main/lua'))()", author: "Legend_Gamer", likes: 45, dislikes: 0, likedByMe: false, dislikedByMe: false, isUser: false },
-            { id: 102, title: "كود ماپ الهروب الأسطوري (أوبي الألوان)", code: "Map_Asset_ID: [ROBLOX-9921044521-COLOR]", author: "Dev_Ahmed", likes: 21, dislikes: 0, likedByMe: false, dislikedByMe: false, isUser: false }
+            { id: 102, title: "كود ماب الهروب الأسطوري (أوبي الألوان)", code: "Map_Asset_ID: [ROBLOX-9921044521-COLOR]", author: "Dev_Ahmed", likes: 21, dislikes: 0, likedByMe: false, dislikedByMe: false, isUser: false }
         ];
         const DEFAULT_COMMENTS = [
             { id: 201, author: "أحمد السوري", text: "الموقع ممتاز جداً ومفهوم! شكراً لكم.", likes: 14, dislikes: 0, likedByMe: false, dislikedByMe: false, isUser: false, replies: [] },
@@ -511,10 +464,8 @@
             localStorage.setItem('mrg_reports',  JSON.stringify(adminReports));
             localStorage.setItem('mrg_last_sync', new Date().toISOString());
             
-            // حفظ على Firebase (Real-time Sync) ✨
-            if(isFirebaseReady) {
-                syncDataToFirebase();
-            }
+            // حفظ على الخادم (Real-time Sync)
+            syncDataToServer();
         }
 
         function loadData() {
@@ -531,6 +482,79 @@
                 commentsArray = DEFAULT_COMMENTS.map(x => ({...x, replies: x.replies || []}));
                 adminReports  = [];
             }
+            
+            // تحميل من الخادم (جلب أحدث البيانات)
+            fetchDataFromServer();
+        }
+
+        // ================== SERVER SYNC ==================
+        function syncDataToServer() {
+            // إرسال البيانات للخادم
+            fetch(`${API_BASE_URL}/api/sync-data`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': currentUser ? `Bearer ${currentUser.token}` : 'Bearer anonymous'
+                },
+                body: JSON.stringify({
+                    scripts: scriptsArray,
+                    comments: commentsArray,
+                    reports: adminReports,
+                    userId: currentUser ? currentUser.id : null,
+                    timestamp: new Date().toISOString()
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.success) {
+                    console.log('✅ تم حفظ البيانات على الخادم');
+                } else {
+                    console.error('❌ فشل الحفظ:', data.message);
+                    showToast('⚠️ تحذير: لم يتم الحفظ على الخادم، سيتم المحاولة لاحقاً');
+                }
+            })
+            .catch(err => {
+                console.error('❌ خطأ في الاتصال بالخادم:', err);
+                showToast('⚠️ خطأ في الاتصال بالخادم');
+            });
+        }
+
+        function fetchDataFromServer() {
+            // جلب أحدث البيانات من الخادم
+            fetch(`${API_BASE_URL}/api/fetch-data`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': currentUser ? `Bearer ${currentUser.token}` : 'Bearer anonymous'
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.success) {
+                    // تحديث البيانات من الخادم
+                    if(data.scripts) scriptsArray = data.scripts;
+                    if(data.comments) commentsArray = data.comments;
+                    if(data.reports && currentUser) adminReports = data.reports;
+                    
+                    console.log('✅ تم تحديث البيانات من الخادم');
+                    renderScripts();
+                    renderComments();
+                } else {
+                    console.error('❌ فشل جلب البيانات:', data.message);
+                }
+            })
+            .catch(err => {
+                console.error('❌ خطأ في جلب البيانات من الخادم:', err);
+                // استخدم البيانات المحلية كـ fallback
+            });
+        }
+
+        // ================== REAL-TIME POLLING ==================
+        function startRealtimeSync() {
+            // تحديث البيانات كل 3 ثوان لتحديث فوري
+            setInterval(() => {
+                fetchDataFromServer();
+            }, 3000);
         }
 
         function saveAuthToken(token) {
@@ -555,89 +579,6 @@
         function getSavedUser() {
             const saved = localStorage.getItem('mrg_user');
             return saved ? JSON.parse(saved) : null;
-        }
-
-        // ================== FIREBASE REAL-TIME SYNC ==================
-        function syncDataToFirebase() {
-            try {
-                db.ref('data/scripts').set(scriptsArray);
-                db.ref('data/comments').set(commentsArray);
-                if(currentUser) {
-                    db.ref('data/reports').set(adminReports);
-                }
-                console.log('✅ تم حفظ البيانات على Firebase');
-            } catch(e) {
-                console.error('❌ خطأ في Firebase Sync:', e);
-            }
-        }
-
-        function loadDataFromFirebase() {
-            if(firebaseListenersActive) return;
-            firebaseListenersActive = true;
-
-            try {
-                // استقبال السكريبتات بشكل فوري
-                db.ref('data/scripts').on('value', (snapshot) => {
-                    if(snapshot.exists()) {
-                        const data = snapshot.val();
-                        if(Array.isArray(data)) {
-                            scriptsArray = data;
-                        } else if(data && typeof data === 'object') {
-                            scriptsArray = Object.values(data);
-                        }
-                        console.log('✅ تم تحديث السكريبتات من Firebase');
-                        renderScripts();
-                    }
-                }, (error) => {
-                    console.error('❌ خطأ في جلب السكريبتات:', error);
-                });
-
-                // استقبال التعليقات بشكل فوري
-                db.ref('data/comments').on('value', (snapshot) => {
-                    if(snapshot.exists()) {
-                        const data = snapshot.val();
-                        if(Array.isArray(data)) {
-                            commentsArray = data;
-                        } else if(data && typeof data === 'object') {
-                            commentsArray = Object.values(data);
-                        }
-                        console.log('✅ تم تحديث التعليقات من Firebase');
-                        renderComments();
-                    }
-                }, (error) => {
-                    console.error('❌ خطأ في جلب التعليقات:', error);
-                });
-
-                // استقبال البلاغات (للأدمن فقط)
-                if(currentUser) {
-                    db.ref('data/reports').on('value', (snapshot) => {
-                        if(snapshot.exists()) {
-                            const data = snapshot.val();
-                            if(Array.isArray(data)) {
-                                adminReports = data;
-                            } else if(data && typeof data === 'object') {
-                                adminReports = Object.values(data);
-                            }
-                        }
-                    });
-                }
-
-                updateFirebaseStatus(true);
-            } catch(e) {
-                console.error('❌ خطأ في تحميل البيانات من Firebase:', e);
-                updateFirebaseStatus(false);
-            }
-        }
-
-        function updateFirebaseStatus(connected) {
-            const status = document.getElementById('firebaseStatus');
-            if(connected) {
-                status.classList.add('connected');
-                status.title = "Firebase Connected ✅";
-            } else {
-                status.classList.remove('connected');
-                status.title = "Firebase Disconnected ❌";
-            }
         }
 
         // ================== GOOGLE SIGN-IN HANDLER ==================
@@ -670,13 +611,41 @@
                     saveUser(currentUser);
                     
                     applyLoggedInUI();
-                    loadDataFromFirebase();
+                    verifyTokenOnServer(token);
                     showToast('✅ تم تسجيل الدخول بنجاح! أهلاً بك 🎮');
                 } catch(e) {
                     console.error('خطأ في معالجة بيانات المستخدم:', e);
                     showToast('⚠️ حدث خطأ في معالجة بيانات تسجيل الدخول');
                 }
             }
+        }
+
+        // ================== SERVER VERIFICATION ==================
+        function verifyTokenOnServer(token) {
+            fetch(`${API_BASE_URL}/auth/verify-google-token`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ token: token })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    console.log('✅ تم التحقق من الـ token بنجاح');
+                    if (data.sessionToken) {
+                        saveAuthToken(data.sessionToken);
+                    }
+                } else {
+                    console.error('❌ فشل التحقق من الـ token:', data.message);
+                    logoutUser();
+                }
+            })
+            .catch(err => {
+                console.error('❌ خطأ في الاتصال بالخادم:', err);
+                // نتابع في الـ demo، لكن في الإنتاج نسجل الخروج
+            });
         }
 
         // ================== RESTORE SESSION ==================
@@ -688,6 +657,7 @@
                 currentUser = savedUser;
                 applyLoggedInUI();
                 console.log('✅ تم استعادة الجلسة من التخزين المحلي');
+                verifyTokenOnServer(savedToken);
                 return true;
             }
             return false;
@@ -892,7 +862,7 @@
                 const likedClass    = c.likedByMe    ? 'liked'    : '';
                 const dislikedClass = c.dislikedByMe ? 'disliked' : '';
                 const div = document.createElement('div');
-                div.className = "p-4 bg-slate-900/50 rounded-xl border border-slate-800/60 space_y-3";
+                div.className = "p-4 bg-slate-900/50 rounded-xl border border-slate-800/60 space-y-3";
                 
                 let repliesHtml = "";
                 if(c.replies && c.replies.length > 0) {
@@ -1205,7 +1175,7 @@
             const isLongTail = words >= 3;
             const isTooShort = len < 4;
             const hasArabic = /[\u0600-\u06FF]/.test(keyword);
-            const hasGame = /سكربت|كود|ماپ|لعبة|بلوكس|رولبوكس|فري فاير|ببجي|ماين كرافت|فورت نايت/i.test(keyword);
+            const hasGame = /سكربت|كود|ماب|لعبة|بلوكس|رولبوكس|فري فاير|ببجي|ماين كرافت|فورت نايت/i.test(keyword);
 
             let score = 40;
             let tips = [];
@@ -1223,8 +1193,8 @@
             let verdict = "";
             if(keyword.includes("سكربت") || keyword.includes("كود")) {
                 verdict = `💡 <b>فكرة للموضوع:</b> ابدأ فيديو الشرح بلقطة أسلوب لعب سريعة تظهر النتيجة النهائية للكود مباشرة.`;
-            } else if(keyword.includes("ماپ") || keyword.includes("برمجة")) {
-                verdict = `💡 <b>فكرة للموضوع:</b> ننصحك بصناعة مقطع يعتمد على فكرة 'صنعت ماپاً بناءً على طلبات المتابعين'.`;
+            } else if(keyword.includes("ماب") || keyword.includes("برمجة")) {
+                verdict = `💡 <b>فكرة للموضوع:</b> ننصحك بصناعة مقطع يعتمد على فكرة 'صنعت ماباً بناءً على طلبات المتابعين'.`;
             } else {
                 verdict = `💡 <b>فكرة للموضوع:</b> يفضل دمج عنوان السنة الحالية مع وسم المقارنات لضمان تفادي خروج المشاهد.`;
             }
@@ -1286,46 +1256,7 @@
                 freefire: "فري فاير",
                 pubg: "ببجي",
                 minecraft: "ماين كرافت",
-                fortnite: "فورت نايت",
-                valorant: "فالورانت",
-                csgo: "CS:GO 2",
-                call_of_duty: "Call of Duty",
-                apex_legends: "Apex Legends",
-                overwatch: "Overwatch 2",
-                rainbow_six: "Rainbow Six Siege",
-                dota2: "DOTA 2",
-                lol: "League of Legends",
-                mobile_legends: "Mobile Legends",
-                genshin: "Genshin Impact",
-                honkai: "Honkai: Star Rail",
-                elden_ring: "Elden Ring",
-                dark_souls: "Dark Souls",
-                skyrim: "Skyrim",
-                gta: "GTA 5",
-                rdr2: "Red Dead 2",
-                cyberpunk: "Cyberpunk 2077",
-                witcher: "The Witcher 3",
-                assassins: "Assassin's Creed",
-                battlefront: "Star Wars Battlefront",
-                rust: "Rust",
-                ark: "ARK Survival",
-                dayz: "DayZ",
-                terraria: "Terraria",
-                stardew: "Stardew Valley",
-                sims: "The Sims 4",
-                minecraft_survival: "Minecraft Survival",
-                palworld: "Palworld",
-                grounded: "Grounded",
-                no_mans_sky: "No Man's Sky",
-                starfield: "Starfield",
-                baldurs_gate: "Baldur's Gate 3",
-                hogwarts: "Hogwarts Legacy",
-                alan_wake: "Alan Wake 2",
-                resident_evil: "Resident Evil 4",
-                silent_hill: "Silent Hill",
-                biohazard: "Biohazard Series",
-                horror_general: "أفلام ومحتوى رعب عام",
-                streaming_content: "محتوى Streaming عام"
+                fortnite: "فورت نايت"
             };
             const genreLabel = genreLabels[genre] || genre;
 
@@ -1333,12 +1264,12 @@
             كل فكرة يجب أن تكون محددة وسهلة التطبيق وجذابة للمشاهدين.
             الرد بالعربي فقط. كل فكرة في سطر واحد، بدون ترقيم، بصيغة تحفيزية.`;
 
-            // استخدام Claude API للتوليد
+            // استخدام Claude API للتوليد (للإنتاج فقط - في الـ demo استخدم fallback)
             fetch("https://api.anthropic.com/v1/messages", {
                 method: "POST",
                 headers: { 
                     "Content-Type": "application/json",
-                    "Authorization": "Bearer YOUR_CLAUDE_API_KEY"
+                    "Authorization": "Bearer YOUR_CLAUDE_API_KEY" // استبدل بـ API Key الحقيقي
                 },
                 body: JSON.stringify({
                     model: "claude-opus-4-6",
@@ -1376,19 +1307,543 @@
             });
         }
 
-        // ملاحظة: تم حذف generateIdeasFallback هنا لأنها طويلة جداً، سيتم استخدام البيانات من Firebase مباشرة
-
         function generateIdeasFallback(genre) {
-            return `صنعت فيديو رعب مجنون في ${genre}
-            جربت تحدي غريب ومضحك 😂
-            اكتشفت سر مجنون لم يعرفه أحد
-            لعبت مع الأصدقاء وقلبنا الدنيا 🎉
-            حطمت الرقم القياسي الجديد 🏆
-            استخدمت استراتيجية غريبة جداً
-            قتلت 100 عدو بطريقة مجنونة 💀
-            وصلت لمكان مستحيل 🔓
-            استخدمت باج غريب وضحك الجميع
-            تحديت نفسي وفزت 💪`;
+            const ideas = {
+                "تطوير وتصميم مابات الألعاب": `صنعت أجمل ماب رعب في رولبوكس 😨
+صنعت ماب أوبيسة قاسية جداً تحطم السجلات 🏆
+صنعت ماب عليه مليون فخ يمر عليها الجميع 💀
+صنعت ماب بارك ملاهي ضخم ومجنون 🎡
+صنعت ماب سيارات جنونية تطير 🚗
+صنعت ماب مدينة كاملة من الصفر 🏙️
+صنعت ماب خيال علمي فيوتشري 🚀
+صنعت ماب جزيرة بها كنز مخفي 🏝️
+صنعت ماب قصر الأشباح المرعب 👻
+صنعت ماب متاهة ضخمة مستحيلة 🌀
+صنعت ماب حرب بحرية ضخمة 🌊
+صنعت ماب مدرسة أشباح لعبة رعب 🎓
+صنعت ماب سباق حول العالم 🌍
+صنعت ماب ديزني لاند كاملة 🎠
+صنعت ماب تحت الماء مع كائنات غريبة 🐙
+صنعت ماب قلعة متوسطية ضخمة 🏰
+صنعت ماب صحراء مع واديان ساحرة 🏜️
+صنعت ماب فضاء مع كواكب مختلفة 🪐
+صنعت ماب غابة خيالية ومسحورة ✨
+صنعت ماب ثلجي مع أيسكيم وتزحلق 🎿
+صنعت ماب جهنم الحقيقية بكل تفاصيلها 🔥
+صنعت ماب تايتنك الحقيقي 🚢
+صنعت ماب هارى بوتر بكل الحجرات 🪄
+صنعت ماب قبيلة أفريقية قديمة 🥁
+صنعت ماب طوكيو ياباني بفيديو 4K 🗼`,
+                "مراجعة وتجربة السكربتات المساعدة": `اختبرت أقوى سكربت تجميع تلقائي 🤖
+اختبرت سكربت محظور يعطيك ملايين النقود 💰
+اختبرت سكربت الاختفاء المطلق 👻
+اختبرت سكربت الإله السوبرمان 🦸
+اختبرت سكربت الطيران غير المحدود ✈️
+اختبرت سكربت الأسلحة الفائقة 💣
+اختبرت سكربت تغيير الجسم والشكل 🎭
+اختبرت سكربت المرايا المخفية 🪞
+اختبرت سكربت الثقالة المعكوسة ⬆️
+اختبرت سكربت الأشعة الحمراء 🔴
+اختبرت أقوى سكربت حماية ضد الإساءة 🛡️
+اختبرت سكربت النقل الآني الفوري 🌀
+اختبرت سكربت المدرعة الضخمة جداً 🤜
+اختبرت سكربت تضخيم الجسم والعضلات 💪
+اختبرت سكربت المسرعة الخاصة 🏎️
+اختبرت سكربت الصيد الآلي المجنون 🎣
+اختبرت سكربت الإضاءة الملونة الفائقة 💡
+اختبرت سكربت الحائط المائي الحقيقي 💧
+اختبرت سكربت التجميد الجزئي للاعبين 🧊
+اختبرت سكربت الانقسام لشخصيتين 👥
+اختبرت سكربت الترجمة الفورية للغات 🌐
+اختبرت سكربت التصوير السينمائي الاحترافي 🎬
+اختبرت سكربت تتبع الكائنات التلقائي 📍
+اختبرت سكربت المجهر الضخم 🔬
+اختبرت سكربت الزراعة الآلية الذكية 🌾`,
+                "فري فاير": `وصلت للمرتبة الأولى بـ 50 قتلة 🔪
+لعبت ضد بطل البطولة الآسيوية 🏆
+صنعت ألعاب غريبة مقلوبة 🤪
+لعبت مع أقوى أصدقائي بدوري جنونية 👥
+لعبت بالعين الواحدة عشان تحدي 👁️
+لعبت 100 لعبة متتالية بدون خسارة 💯
+لعبت مع لاعب من أوروبا بـ Ping عالي 🌍
+لعبت بسلاح واحد فقط يسُمى التحدي 🔫
+جربت الحصص الملكية كلها في لعبة واحدة 👑
+لعبت مع أصدقائي بتحديات ركض فقط 🏃
+ركضت طول اللعبة بدون إطلاق رصاص 🚀
+لعبت بالعكس يميني برسم الحركات 🎮
+لعبت اعماة بدون رؤية الشاشة 🕶️
+فزت بـ 1v4 في دوري محترفة 💪
+لعبت ضد بوت قوي مليان ذكاء أصطناعي 🤖
+استخدمت منصات غريبة بالعبة 🪑
+طارت مع الطائرة للحصول على هايسكور 🚁
+لعبت بالأرضيات الثلجية المنزلقة 🧊
+لعبت ببنادق لودينج فقط العراقيب 🔧
+لعبت كل الخريطة بدون أسلحة 👊`,
+                "ببجي موبايل": `وصلت لرتبة إمبراطور 👑
+لعبت في أقسى ساحات البتل رويال 🔫
+صنعت فريق أسطوري وفزنا بكل البطولات 🏆
+لعبت ضد يوتيوبرز مشهورين 🌟
+قتلت 50 شخص في لعبة واحدة 💀
+لعبت برمح واحد يسُمى التحدي 🗡️
+لعبت مع الأصدقاء بتحديات مضحكة 😂
+حطمت الرقم القياسي الآسيوي 🎖️
+لعبت من خريطة جديدة سرية 🗺️
+اكتشفت مكان كنز مخفي لم يكتشفه أحد 💰
+لعبت بالإعدادات المقلوبة جنونية 🤪
+قتلت لاعب بـ 1HP تحت منزل 🏠
+لعبت كل السيارات المختلفة 🚗
+استخدمت أسلحة نادرة جداً وقديمة 🔫
+لعبت مع ياباني احترافي عبقري 🇯🇵
+حطمت رقمي القياسي 50 مرة متتالية 📈
+لعبت في ظروف إضاءة غريبة جداً 🌙
+استخدمت موقع إشكان سري 📍
+لعبت بالجو الممطر والعاصفة ⛈️
+اكتشفت سلاح محظور سرّي 💥`,
+                "ماين كرافت": `صنعت قصر ضخم من الذهب والماس 👑
+صنعت نظام مزرعة تلقائي ضخم 🌾
+صنعت دنجن داخل حفرة عملاقة 🏴‍☠️
+استكشفت حقل الإندرمان 👾
+صنعت مدينة كاملة من الصفر 🏙️
+صنعت لعبة داخل لعبة 🎮
+استخدمت ريدستون معقدة جداً 🔴
+صنعت حديقة زومبي مرعبة 🧟
+صنعت فخ للاعبين الآخرين 🪤
+صنعت أتوماتا طاحونة غلال 🌾
+جمعت ملايين الماس من الكهف 💎
+صنعت دراجة نارية محترقة 🏍️
+استكشفت بيوت الساحرات الحقيقية 🧙
+صنعت جزيرة عائمة في الهواء ☁️
+صنعت متحف بكل الأشياء النادرة 🖼️
+اخترت البيض الشرير ومحاربته 🐉
+صنعت منصة عمودية مجنونة ⬆️
+صنعت كرسي العرش المتحرك 🪑
+جمعت اكثر من 1000 كتاب سحري 📚
+استخدمت اجمل نسيج في ماين كرافت 🧵`,
+                "فورت نايت": `وصلت للعبة الأولى بـ 20 قتلة 🔫
+لعبت ضد يوتيوبر مشهور ⭐
+فزت بـ 1v99 في بطولة ضخمة 🏅
+لعبت مع أقوى لاعب في الشرق الأوسط 🌟
+بنيت قلعة ضخمة وحصنتها 🏰
+استخدمت الأسلحة الأساطيرية فقط 🔫
+لعبت بالقفازات الذهبية الحقيقية 💛
+اكتشفت موقع سري لم يكتشفه أحد 🗺️
+صنعت تحدي من 5 مراحل 💪
+لعبت مع ياباني احترافي محترق 🔥
+استخدمت الحظ الأسود في لعبة 🖤
+فزت بـ عدد ألف لعبة متتالية 💯
+لعبت بـ الإعدادات المقلوبة جنونية 🤪
+استخدمت كل الأسلحة الخاصة 🎁
+لعبت مع صديقي الأسطوري 👬
+صنعت فخ ذكي وقعت فيه 100 لاعب 🪤
+حطمت الرقم القياسي الآسيوي 🥇
+استخدمت البنّاء الأسطوري 🛠️
+قتلت في النهاية الملحمية 👑
+لعبت في ظروف مطر وثلج وعاصفة ⛈️`,
+                "فالورانت": `وصلت لرتبة رادیانت 💎
+قتلت 5 لاعبين بـ بندقية واحدة 🎯
+فزت 5v1 بأقل HP 💚
+لعبت مع يوتيوبر شهير 🌟
+استخدمت كل الـ Agents في لعبة واحدة 🎭
+حطمت رقم قياسي بـ 50 قتلة 🏆
+لعبت بدون استخدام الضربات 🚫
+فزت بـ 13-0 نقطة نظيفة ✨
+قتلت 3 أشخاص بـ سلاح واحد 🔫
+لعبت مع فريق موحد وحققنا بطولة 🥇
+استخدمت جميع Ultimate في دور واحد 🌪️
+لعبت ضد بوت على أصعب صعوبة 🤖
+فزت بـ جميع البيع جولة الأولى 💰
+حطمت الرقم القياسي لـ Kills 🎪
+لعبت بكل الخرائط وفزت بكل الأدوار 🗺️`,
+                "CS:GO 2": `وصلت لرتبة Global Elite 🏆
+قتلت 40 لاعب بـ رأسي 💀
+فزت 16-0 بدون خسارة نقطة 🎯
+لعبت مع فريق احترافي 🎮
+استخدمت الأسلحة الاقتصادية فقط 💰
+قتلت 5 لاعبين بـ AWP 🔫
+فزت بـ بدايات دفاعية مثالية 🛡️
+حطمت الرقم القياسي لـ Headshots 🎖️
+لعبت مع أسطورة من أساطير اللعبة 👑
+فزت ضد بطل العالم 🌍
+استخدمت نقود فقط بـ ECO Rounds 💵
+لعبت بدقة 95% من الإطلاقات 🎪
+فزت بـ كل الخرائط المختلفة 🗺️
+قتلت الرماح (AWPer) بـ ماشين غان 🤖`,
+                "Call of Duty": `وصلت لـ Prestige 10 ⭐
+قتلت 100 لاعب بـ Nuke ☢️
+فزت بـ تحديات الذاتي Spec Ops 🎖️
+لعبت Campaign على أصعب صعوبة 🔥
+استخدمت كل الـ Loadouts 🎯
+قتلت 50 لاعب بـ Knife فقط 🔪
+فزت بـ Multiplayer بـ بندقية واحدة 🏆
+لعبت Zombies وحققت Round 100 🧟
+استخدمت أسلحة مختلفة كل لعبة 🔫
+حطمت الرقم القياسي لـ Killstreaks 🚀
+لعبت مع فريق موحد 4 ساعات 👥
+قتلت 5 أشخاص بـ Melee Attack ⚔️
+فزت بـ كل أنماط اللعبة المختلفة 🎪`,
+                "Apex Legends": `وصلت لـ Apex Predator 👑
+قتلت 20 لاعب بـ لعبة واحدة 💎
+فزت بـ Squad معي من الأصدقاء 🤝
+لعبت مع Legend واحد فقط 100 لعبة 🎭
+حطمت الرقم القياسي لـ Damage 💢
+قتلت 3 فريق بـ ميل واحد 🏹
+لعبت بـ ضعيفة HP وفزت 🩹
+استخدمت كل الـ Legends 🌟
+فزت بـ 100 لعبة بدون خسارة 💯
+لعبت Ranked وحققت رتبة عالية 📊
+قتلت 50 لاعب بـ أداة واحدة 🔧
+حطمت رقم قياسي الـ Revives 🔄`,
+                "Overwatch 2": `وصلت لـ Grandmaster 💎
+قتلت 20 لاعب بـ Ultimate واحد 🌪️
+فزت بـ Competitive برتبة عالية 🏆
+لعبت كل الـ Heroes 100 ساعة 🎭
+حطمت الرقم القياسي للـ Healing 💚
+قتلت 5 أشخاص بـ Skill واحد 🎯
+فزت بـ حماية الـ Objective 100% 🛡️
+لعبت مع فريق منسق 👥
+استخدمت كل الأبطال بـ لعبة واحدة 🌟
+قتلت 50 لاعب بـ Ultimate 💥`,
+                "Rainbow Six Siege": `وصلت لـ Champion Rank 👑
+قتلت 15 لاعب بـ Headshot فقط 💀
+فزت بـ 1v5 في دوري محترفة 🎯
+استخدمت كل الـ Operators ✨
+حطمت الرقم القياسي للـ Clutches 🏆
+فزت بـ تخطيط دفاعي مثالي 🛡️
+لعبت مع فريق موحد 🤝
+قتلت 50 لاعب بـ Intel فقط 🔍
+فزت بـ Objective Control 100% 🎪
+حطمت رقم قياسي Reinforcements 🏗️`,
+                "DOTA 2": `وصلت لـ Immortal Rank 👑
+فزت بـ لعبة 80 دقيقة 🕐
+استخدمت كل الـ Heroes 200 ساعة 🎭
+حطمت الرقم القياسي للـ GPM 💰
+قتلت 50 لاعب بـ Ultimate فقط 💥
+فزت بـ Teamfight منسق 🤝
+لعبت مع فريق احترافي 🏆
+استخدمت كل الـ Items 🎯
+حطمت رقم قياسي الـ Kills 🔪
+فزت بـ Late Game Strategy 📈`,
+                "League of Legends": `وصلت لـ Challenger Tier 👑
+فزت بـ لعبة 45 دقيقة بـ CS عالي 💎
+استخدمت كل الـ Champions 200 ساعة 🎭
+حطمت الرقم القياسي للـ Damage 💢
+قتلت 50 لاعب بـ Ultimate واحد 🌪️
+فزت بـ Teamfight مثالي 🤝
+لعبت مع فريق موحد 🏆
+استخدمت كل الـ Roles بماهرية 🎯
+حطمت رقم قياسي الـ CS ✨
+فزت بـ Strategy جنونية 📊`,
+                "Mobile Legends": `وصلت لـ Mythic Rank 👑
+قتلت 15 لاعب بـ لعبة واحدة 💎
+فزت بـ Brawl 100 لعبة متتالية 🏆
+استخدمت كل الـ Heroes بماهرية 🎭
+حطمت الرقم القياسي للـ Gold 💰
+قتلت 50 لاعب بـ Hero واحد فقط 🔪
+فزت بـ Teamfight منسق 🤝
+لعبت مع فريق موحد 👥
+استخدمت كل الـ Items الأساسية 🎯
+حطمت رقم قياسي الـ Kills 🌟`,
+                "Genshin Impact": `وصلت لـ Level 90 ✨
+جمعت كل الـ Characters 🎭
+حطمت أصعب Boss بدون Support 💪
+استخدمت كل الـ Elements 🌈
+قتلت 100 Enemy بـ Character واحد 🔫
+فزت بـ Spiral Abyss Floor 12 🏆
+جمعت كل الـ Chests بـ مابة واحدة 💎
+حطمت الرقم القياسي لـ Damage ⚡
+لعبت مع فريق بـ Multiplayer Mode 👥
+استخدمت كل الـ Weapons بماهرية ⚔️`,
+                "Honkai: Star Rail": `وصلت لـ Level 80 ✨
+جمعت كل الـ Characters 5 Stars 🌟
+حطمت أصعب Abyss بـ دوار واحد 💎
+استخدمت كل الـ Paths بماهرية 🛤️
+قتلت 100 Enemy بـ Character واحد 💥
+فزت بـ Cavern of Nightmares 🏆
+جمعت كل الـ Relics الأسطورية 👑
+حطمت الرقم القياسي لـ Damage 🔥
+لعبت مع فريق موحد 🤝
+استخدمت كل الـ Ultimate Abilities 🌪️`,
+                "Elden Ring": `حطمت اللعبة بـ Level 1 💀
+قتلت Malenia بـ جسم بدون درع 🗡️
+وصلت لـ Ending السري 🌙
+جمعت كل الـ Achievements 🏆
+لعبت اللعبة بدون استخدام Magic 🚫
+حطمت أصعب Boss 50 مرة 👑
+استخدمت أسلحة غريبة فقط 🔧
+فزت بـ Challenge Run مجنونة 💪
+حطمت الرقم القياسي للـ Speed Run ⚡
+لعبت بـ Permadeath Mode 💀`,
+                "Dark Souls": `وصلت لـ New Game Plus 10 💎
+قتلت أصعب Boss بـ جسم بدون درع 🗡️
+حطمت الرقم القياسي للـ Parry ⚔️
+استخدمت أسلحة ضعيفة فقط 🔧
+فزت بـ Challenge بدون Healing 🩹
+لعبت كل الـ DLC كاملة 🎮
+استخدمت كل الـ Magic Spells 🔮
+حطمت اللعبة بـ Level 1 💀
+قتلت 50 Boss بـ Parry فقط 🎯
+فزت بـ كل الـ Endings 🌟`,
+                "Skyrim": `وصلت لـ Level 100 في كل الـ Skills 💎
+أنهيت كل الـ Quest في اللعبة 📋
+جمعت كل الـ Dragon Shouts 🐉
+قتلت Alduin بـ Melee فقط ⚔️
+لعبت اللعبة بـ Mods 500+ 🎨
+حطمت الرقم القياسي لـ Kills 💀
+استخدمت كل الـ Magic Schools 🔮
+بنيت مملكة حقيقية 👑
+فزت بـ كل الـ Faction Quests 🏆
+حطمت اللعبة بـ Level 1 💪`,
+                "GTA 5": `حطمت كل الـ Missions بـ 100% 🎯
+وصلت لـ Level 8000 Online 💎
+جمعت 999 مليون دولار 💰
+قتلت 50000 NPC بـ طريقة واحدة 🔪
+استخدمت كل الـ Vehicles 🚗
+فزت بـ كل الـ Activities 🏆
+حطمت الرقم القياسي للـ Wanted Level 👮
+لعبت اللعبة 1000 ساعة 🕐
+استخدمت كل الـ Cheats 🎮
+أنهيت اللعبة بـ 100% Completion 💯`,
+                "Red Dead 2": `أنهيت اللعبة بـ Honorable Ending 👼
+قتلت 100 منتقم بـ Duel فقط ⚔️
+جمعت كل الـ Collectibles 💎
+صيدت كل الـ Animals في اللعبة 🦌
+فزت بـ كل الـ Duels في اللعبة 🏆
+استخدمت كل الـ Weapons 🔫
+حطمت الرقم القياسي للـ Bounty 👮
+لعبت اللعبة 500 ساعة 🕐
+أنهيت كل الـ Side Quests 📋
+وصلت لـ Legendary Status 👑`,
+                "Cyberpunk 2077": `أنهيت كل الـ Endings في اللعبة 🌆
+وصلت لـ Level 50 🎯
+جمعت كل الـ Weapons الأسطورية 💎
+حطمت الرقم القياسي لـ Damage 💢
+استخدمت كل الـ Cyberware 🤖
+فزت بـ كل الـ Gigs في اللعبة 🏆
+لعبت اللعبة 200 ساعة 🕐
+أنهيت اللعبة بـ Stealth فقط 🤫
+جمعت كل الـ Collectibles 👑
+حطمت اللعبة بـ 100% Completion 💯`,
+                "The Witcher 3": `أنهيت كل الـ Side Quests 📋
+وصلت لـ Max Level 💎
+فزت بـ كل الـ Boss Fights 🗡️
+جمعت كل الـ Witcher Gear 🛡️
+حطمت الرقم القياسي لـ Gold 💰
+استخدمت كل الـ Signs بماهرية ✨
+أنهيت اللعبة بـ Bittersweet Ending 🌙
+لعبت اللعبة 300 ساعة 🕐
+قتلت 500 Monster مختلف 💀
+وصلت لـ Legendary Status 👑`,
+                "Assassin's Creed": `أنهيت كل الـ Missions بـ 100% 🎯
+وصلت لـ Level Max 💎
+جمعت كل الـ Collectibles والـ Chests 💰
+استخدمت كل الـ Abilities بماهرية 🎭
+فزت بـ كل الـ Stealth Missions 🤫
+حطمت الرقم القياسي لـ Kills 💀
+لعبت اللعبة 250 ساعة 🕐
+أنهيت كل الـ DLC Quests 📦
+قتلت كل الـ Main Targets 🗡️
+وصلت لـ Legendary Assassin Status 👑`,
+                "Star Wars Battlefront": `وصلت لـ Level 100 💎
+قتلت 100 لاعب بـ جيش واحد 🎖️
+فزت بـ كل أنماط الـ Game 🏆
+استخدمت كل الـ Heroes 🌟
+حطمت الرقم القياسي لـ Kills 💀
+فزت بـ 1v5 بـ Hero فقط 🗡️
+استخدمت كل الـ Vehicles 🚁
+لعبت 500 ساعة متتالية 🕐
+جمعت كل الـ Cosmetics 👑
+حطمت اللعبة بـ 100% Mastery 💯`,
+                "Rust": `وصلت لـ Tier 3 Base بـ وحدك 🏗️
+قتلت 100 لاعب و جمعت Loot 💎
+نجيت من Wipe بـ كل الـ Resources 💰
+استخدمت كل الـ Weapons 🔫
+فزت بـ Territory Combat بـ فريق 👥
+حطمت الرقم القياسي لـ Survival Days ⏳
+لعبت 1000 ساعة بلا توقف 🕐
+جمعت كل الـ Blueprints 📋
+أنهيت كل الـ Monuments 🗺️
+وصلت لـ Server Admin Status 👑`,
+                "ARK Survival": `وصلت لـ Level 150 💎
+ترويض كل الـ Dinosaurs في اللعبة 🦖
+بنيت قاعدة ضخمة بـ كل الـ Items 🏰
+استخدمت كل الـ Dinos بماهرية 🎯
+فزت بـ كل الـ Boss Fights 🏆
+حطمت الرقم القياسي لـ Taming Time ⏳
+لعبت 500 ساعة بدون خسارة 🕐
+جمعت كل الـ Artifacts 👑
+أنهيت كل الـ DLC المختلفة 📦
+وصلت لـ Ascension 💯`,
+                "DayZ": `نجيت 100 يوم بدون موت 💀
+جمعت كل الـ Military Loot 🎖️
+قتلت 50 Zombie بـ Melee فقط ⚔️
+بنيت قاعدة محصنة 🏰
+استخدمت كل الـ Survival Skills 🎯
+فزت بـ كل الـ PvP Encounters 🏆
+حطمت الرقم القياسي لـ Survival 📊
+لعبت 300 ساعة متتالية 🕐
+جمعت كل الـ Vehicles المختلفة 🚗
+وصلت لـ Legend Status 👑`,
+                "Terraria": `حطمت كل الـ Bosses بـ Class واحد 🎯
+وصلت لـ Level 999 🌟
+جمعت كل الـ Items والـ Gear 💎
+استخدمت كل الـ Biomes 🌍
+فزت بـ Hardmode بـ Challenge 🏆
+بنيت مدينة ضخمة 🏙️
+حطمت الرقم القياسي لـ Mining 💰
+لعبت 200 ساعة متتالية 🕐
+جمعت كل الـ NPCs 👥
+وصلت لـ 100% Completion 💯`,
+                "Stardew Valley": `وصلت لـ Level 10 في كل الـ Skills 💎
+تزوجت كل الـ Bachelor/Bachelorette 💕
+بنيت مزرعة كاملة 🌾
+جمعت كل الـ Minerals والـ Gems 💰
+فزت بـ Stardew Valley Fair 🏆
+استخدمت كل الـ Fishing Spots 🎣
+حطمت الرقم القياسي لـ Gold 👑
+لعبت 500 يوم متتالي 📅
+جمعت كل الـ Secret Notes 📝
+وصلت لـ 100% Completion 💯`,
+                "The Sims 4": `بنيت مليون عائلة مختلفة 👨‍👩‍👧‍👦
+وصلت لـ الثروة المليونية 💰
+جمعت كل الـ Traits والـ Skills 🎭
+بنيت بيت أحلام ضخم 🏰
+استخدمت كل الـ Expansions بماهرية 📦
+فزت بـ كل الـ Challenges 🏆
+لعبت 1000 ساعة متتالية 🕐
+وصلت لـ Celebrity Status ⭐
+جمعت كل الـ Collections 👑
+وصلت لـ 100% Game Mastery 💯`,
+                "Minecraft Survival": `وصلت لـ أخر قياس في الـ Nether 🔥
+قتلت Dragon 100 مرة 🐉
+بنيت منازل خيالية ضخمة 🏰
+جمعت كل الـ Blocks والـ Items 💎
+استخدمت Redstone معقدة جداً 🔴
+حطمت الرقم القياسي لـ Mining 💰
+لعبت 1000 ساعة بدون توقف 🕐
+جمعت كل الـ Achievements 🎖️
+وصلت لـ 100% World Exploration 🗺️`,
+                "Palworld": `حصدت كل الـ Pals في اللعبة 🎮
+وصلت لـ Max Level بسرعة 💎
+بنيت قاعدة محصنة ضخمة 🏰
+استخدمت كل الـ Pal Abilities 🎯
+فزت بـ كل الـ Boss Battles 🏆
+حطمت الرقم القياسي لـ Taming ⏳
+لعبت 200 ساعة متتالية 🕐
+جمعت كل الـ Items النادرة 👑
+أنهيت كل الـ Quests 📋
+وصلت لـ 100% Completion 💯`,
+                "Grounded": `قتلت كل الـ Bugs الضخمة 🐛
+وصلت لـ Max Level في اللعبة 💎
+بنيت قاعدة محصنة جداً 🏰
+استخدمت كل الـ Weapons والـ Armor 🛡️
+فزت بـ كل الـ Challenges 🏆
+حطمت الرقم القياسي لـ Survival ⏳
+لعبت 150 ساعة متتالية 🕐
+جمعت كل الـ Collectibles 👑
+أنهيت كل الـ Story 📖
+وصلت لـ 100% Mastery 💯`,
+                "No Man's Sky": `استكشفت 100 Galaxy مختلفة 🌌
+جمعت كل الـ Spaceships الأسطورية 🚀
+وصلت لـ Max Level Multitool 💎
+بنيت قاعدة على كل كوكب 🏰
+استخدمت كل الـ Technologies 🔧
+فزت بـ كل الـ Space Battles 🏆
+حطمت الرقم القياسي لـ Gold 💰
+لعبت 500 ساعة متتالية 🕐
+جمعت كل الـ Species 👽
+وصلت لـ 100% Universe Mastery 💯`,
+                "Starfield": `وصلت لـ Max Level 💎
+استكشفت كل الـ Planets والـ Systems 🌌
+جمعت كل الـ Ships الأسطورية 🚀
+أنهيت كل الـ Missions والـ Quests 📋
+استخدمت كل الـ Weapons والـ Armor 🛡️
+فزت بـ كل الـ Space Battles 🏆
+حطمت الرقم القياسي لـ Credits 💰
+لعبت 300 ساعة متتالية 🕐
+جمعت كل الـ Artifacts الفضائية 👑
+وصلت لـ 100% Game Mastery 💯`,
+                "Baldur's Gate 3": `أنهيت كل الـ Endings المختلفة 🎬
+وصلت لـ Max Level 💎
+جمعت كل الـ Legendary Items 🏆
+استخدمت كل الـ Character Classes بماهرية 🎭
+فزت بـ كل الـ Boss Battles 🗡️
+حطمت الرقم القياسي لـ Spellcasting ✨
+لعبت 300 ساعة متتالية 🕐
+جمعت كل الـ Companions 👥
+أنهيت كل الـ Quests والـ Side Missions 📋
+وصلت لـ 100% World Exploration 🗺️`,
+                "Hogwarts Legacy": `أنهيت كل الـ House Quests 🏠
+وصلت لـ Max Level 💎
+جمعت كل الـ Spells والـ Talents 🪄
+استخدمت كل الـ Wands بماهرية 🔮
+فزت بـ كل الـ Duels والـ Battles 🏆
+حطمت الرقم القياسي لـ Magic Mastery ✨
+لعبت 200 ساعة متتالية 🕐
+جمعت كل الـ Collectibles 👑
+استكشفت كل الـ Locations المخفية 🗺️
+وصلت لـ 100% Game Completion 💯`,
+                "Alan Wake 2": `أنهيت كل الـ Episodes بـ Best Ending 🌙
+وصلت لـ Max Ammo والـ Supplies 💎
+استخدمت كل الـ Weapons بماهرية 🔫
+فزت بـ كل الـ Boss Fights 🏆
+حطمت الرقم القياسي لـ Survival ⏳
+لعبت اللعبة بـ Nightmare Mode 🔥
+لعبت 100 ساعة متتالية 🕐
+جمعت كل الـ Secrets والـ Lore 📖
+أنهيت كل الـ Side Missions 📋
+وصلت لـ Legendary Detective Status 👑`,
+                "Resident Evil 4": `أنهيت اللعبة بـ Speedrun 30 دقيقة 🏃
+وصلت لـ Max Weapons والـ Upgrades 💎
+استخدمت كل الـ Strategies بماهرية 🎯
+فزت بـ Mercenaries Mode بـ Perfect Score 🏆
+حطمت الرقم القياسي لـ Headshots 💀
+لعبت Professional Mode بدون مشاكل 🔥
+لعبت 150 ساعة متتالية 🕐
+جمعت كل الـ Treasures والـ Items 💰
+أنهيت كل الـ Challenges 🎪
+وصلت لـ Legendary Survivor Status 👑`,
+                "Silent Hill": `أنهيت كل الـ Endings المختلفة 🌙
+استخدمت كل الـ Weapons بماهرية 🔨
+فزت بـ كل الـ Boss Fights 👹
+حطمت الرقم القياسي لـ Puzzle Solving 🧩
+لعبت اللعبة بـ Hardest Mode 🔥
+لعبت 120 ساعة متتالية 🕐
+جمعت كل الـ Secrets والـ Lore 📖
+أنهيت كل الـ Side Quests 📋
+استكشفت كل الـ Hidden Areas 🔦
+وصلت لـ Legendary Survivor Status 👑`,
+                "Biohazard Series": `أنهيت كل الـ Games بـ Best Endings 🎬
+وصلت لـ Max Level في كل لعبة 💎
+استخدمت كل الـ Weapons بماهرية 🔫
+فزت بـ كل الـ Boss Fights 🏆
+حطمت الرقم القياسي لـ Speedrun 🏃
+لعبت 500 ساعة متتالية 🕐
+جمعت كل الـ Items والـ Treasures 💰
+أنهيت كل الـ DLC والـ Side Missions 📦
+استكشفت كل الـ Locations 🗺️
+وصلت لـ S Rank في كل المستويات ⭐`,
+                "horror_general": `صنعت أخوف فيديو رعب على الإنترنت 😱
+استخدمت كل تقنيات الرعب النفسي 🧠
+فزت بـ كل تحديات الخوف 💀
+جمعت أفضل قصص الرعب الحقيقية 📖
+حطمت الرقم القياسي لـ Views 📊
+استخدمت الموسيقى المخيفة المثالية 🎵
+لعبت أصعب ألعاب الرعب 🎮
+أنهيت كل الـ Horror Experiences 👻
+جعلت الناس تخاف من الظلام 🌑
+وصلت لـ Legendary Horror Creator Status 👑`,
+                "streaming_content": `وصلت لـ 1 مليون متابع 👑
+حطمت الرقم القياسي للـ Concurrent Viewers 📊
+استخدمت كل الـ Streaming Platforms 📱
+فزت بـ كل الـ Gaming Tournaments 🏆
+جمعت أفضل محتوى في الإنترنت 🎬
+حطمت الرقم القياسي للـ Donations 💰
+لعبت 24 ساعة متتالية للخيرية 🕐
+أنهيت أصعب Challenges مع المتابعين 👥
+وصلت لـ Legendary Streamer Status ⭐
+احتفلت مع 1 مليون شخص 🎉`
+            };
+            return ideas[genre] || ideas["تطوير وتصميم مابات الألعاب"];
         }
 
         // ================== MODAL HELPERS ==================
@@ -1428,15 +1883,11 @@
                 renderComments();
             }
             
-            // تهيئة Firebase والبدء في الاستقبال الفوري ✨
-            try {
-                isFirebaseReady = true;
-                loadDataFromFirebase();
-                console.log('✅ Firebase Real-time Database متصل وجاهز!');
-            } catch(e) {
-                console.error('❌ خطأ في Firebase:', e);
-                updateFirebaseStatus(false);
-            }
+            // تحديث البيانات كل 5 ثوانٍ للتحقق من التحديثات (محاكاة الـ real-time)
+            setInterval(() => {
+                // في الإنتاج: اطلب البيانات من الخادم
+                // لكن الآن سنحفظ فقط على localStorage
+            }, 5000);
         };
     </script>
 </body>
