@@ -2289,6 +2289,14 @@
         var originalGenerateAdvancedTags = generateAdvancedTags;
         var aiSeoRequestId = 0;
 
+        // ======================================================
+        // غيّر السطر ده بس: حط هنا رابط الـ Cloudflare Worker بتاعك
+        // (اللي هتاخده بعد ما تعمل الخطوات اللي في الشرح). الموقع
+        // هيكلم الرابط ده، وهو اللي هيكلم Anthropic بمفتاحك الحقيقي
+        // بأمان من غير ما المفتاح يظهر لأي زائر للموقع أبداً
+        // ======================================================
+        const AI_SEO_PROXY_URL = "PASTE_YOUR_CLOUDFLARE_WORKER_URL_HERE";
+
         // بنستبدلها بفنكشن جديدة: تشغل الأصلية الأول بالظبط زي ما هي
         // (فالسكور والتاجات الثابتة بتظهر فوراً زي الأول من غير أي تغيير)،
         // وبعدين تبعت الكلمة المفتاحية لـ Claude AI عشان يحللها ويرجع
@@ -2360,11 +2368,10 @@
             const requestId = ++aiSeoRequestId;
             showAiSeoLoadingState();
 
-            fetch("https://api.anthropic.com/v1/messages", {
+            fetch(AI_SEO_PROXY_URL, {
                 method: "POST",
                 headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": "Bearer YOUR_CLAUDE_API_KEY" // استبدل بنفس الـ API Key الحقيقي المستخدم فوق
+                    "Content-Type": "application/json"
                 },
                 body: JSON.stringify({
                     model: "claude-sonnet-5",
