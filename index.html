@@ -2274,5 +2274,170 @@
             }
         };
     </script>
+    <!-- ============================================================
+         إضافة جديدة فقط: تقوية أداة "مُظبط كلمات السيو والتاجات" بالذكاء
+         الاصطناعي Claude (بنفس فكرة الاستدعاء المستخدمة فوق بالظبط في
+         مولد الأفكار)، عشان التاجات والنصيحة اللي بترجع تبقى مبنية فعلاً
+         على معنى ونية الكلمة المكتوبة، مش قوالب عامة بس.
+         (مفيش أي سطر اتغير أو اتحذف من الكود الأصلي فوق - ده كله كود
+         مُضاف. النتيجة الفورية الأصلية بتفضل شغالة 100% زي ما هي حتى لو
+         الـ AI اتأخر أو فشل، وبعدين لو الـ AI رد، بنضيف نتيجته فوق نفس
+         الصندوق من غير ما نمسح أو نستبدل حاجة من النتيجة الأصلية)
+    ============================================================ -->
+    <script>
+        // بنحتفظ بنسخة من الفنكشن الأصلية اللي بتحسب السكور والتاجات الثابتة
+        var originalGenerateAdvancedTags = generateAdvancedTags;
+        var aiSeoRequestId = 0;
+
+        // بنستبدلها بفنكشن جديدة: تشغل الأصلية الأول بالظبط زي ما هي
+        // (فالسكور والتاجات الثابتة بتظهر فوراً زي الأول من غير أي تغيير)،
+        // وبعدين تبعت الكلمة المفتاحية لـ Claude AI عشان يحللها ويرجع
+        // تاجات ذكية حقيقية مرتبطة بمعناها + نصيحة سيو مخصصة، وتضيفهم
+        // فوق النتيجة الأصلية من غير ما تلمسها
+        generateAdvancedTags = function() {
+            const keywordEl = document.getElementById('keywordInput');
+            const keyword = keywordEl ? keywordEl.value.trim() : '';
+
+            originalGenerateAdvancedTags();
+
+            // لو مفيش كلمة، الأصلية أصلاً عملت return بدري وعرضت تحذير،
+            // فمفيش داعي نكلف الـ AI بأي طلب فاضي
+            if (!keyword) return;
+
+            fetchSmartSeoInsightFromAI(keyword);
+        };
+
+        // برومبت واضح ومحدد بيدّي الـ AI سياق دقيق: الكلمة نفسها + اسم
+        // اللعبة لو الفنكشن الأصلية (detectGameFromKeyword) لقت تطابق ليها،
+        // وبيطلب رد JSON بس عشان يتعرض تلقائي من غير أي تنسيق زيادة
+        function buildSmartSeoPrompt(keyword) {
+            const matchedGame = detectGameFromKeyword(keyword);
+            const currentYear = new Date().getFullYear();
+            const gameContext = matchedGame
+                ? `\n(تم رصد إن الكلمة مرتبطة باللعبة: "${matchedGame.name}" — خلي التاجات مبنية على ده تحديداً)`
+                : '';
+
+            return `أنت خبير SEO ومتخصص محتوى يوتيوب وتيك توك للجيمنج، وعارف
+بالظبط إيه اللي بيتريند فعلياً عند الجمهور العربي سنة ${currentYear} وإيه
+اللي الناس بتدور عليه بجد على السيرش إنجن ومنصات الفيديو - مش مجرد كلمات عامة.
+
+حلل الكلمة المفتاحية دي بعمق ومن كل زواياها: "${keyword}"${gameContext}
+
+طلوب منك حاجتين بالظبط، مبنيين على المعنى والنية الحقيقية للكلمة دي تحديداً
+(من غير قوالب عامة زي "أفضل X" أو "شرح X" تصلح لأي كلمة تانية):
+
+1) tags: قائمة 8 كلمات مفتاحية/هاشتاجات ذكية ودقيقة، حقيقية وبيستخدمها
+فعلاً صناع محتوى الجيمنج العرب وبيبحث عنها الجمهور بجد على المنصات.
+2) tip: نصيحة سيو واحدة بس (سطرين كحد أقصى)، عملية ومحددة فعلاً، تساعد
+صانع المحتوى يطلع بفيديو ترند بالظبط بالاعتماد على الكلمة دي.
+
+رد بصيغة JSON فقط، من غير أي مقدمة أو خاتمة أو تنسيق Markdown، بالشكل ده
+بالظبط ومن غير أي إضافات تانية:
+{"tags": ["...", "..."], "tip": "..."}`;
+        }
+
+        // مؤشر تحميل بسيط بيتضاف تحت النتيجة الأصلية يدل إن في تحليل
+        // إضافي بالذكاء الاصطناعي شغال، من غير ما يلمس أي عنصر أصلي
+        function showAiSeoLoadingState() {
+            const verdictBox = document.getElementById('seoVerdict');
+            if (!verdictBox) return;
+            const old = document.getElementById('aiSeoBlock');
+            if (old) old.remove();
+            verdictBox.insertAdjacentHTML('beforeend', `
+                <div id="aiSeoBlock" class="mt-2 pt-2 border-t border-pink-900/40">
+                    <p class="text-[11px] text-purple-300 flex items-center gap-1.5">
+                        <span class="animate-spin">🤖</span> جاري تحليل أعمق بالذكاء الاصطناعي...
+                    </p>
+                </div>
+            `);
+        }
+
+        // بتنادي Claude API بنفس الطريقة بالظبط المستخدمة فوق في مولد
+        // الأفكار (نفس الـ endpoint ونفس شكل الهيدر) عشان تجيب تحليل ذكي
+        // للكلمة دي. لو الطلب اتأخر وحد دوس على الزرار تاني، بنتجاهل أي
+        // رد قديم لما يوصل متأخر (aiSeoRequestId) عشان منلخبطش النتيجة
+        function fetchSmartSeoInsightFromAI(keyword) {
+            const requestId = ++aiSeoRequestId;
+            showAiSeoLoadingState();
+
+            fetch("https://api.anthropic.com/v1/messages", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": "Bearer YOUR_CLAUDE_API_KEY" // استبدل بنفس الـ API Key الحقيقي المستخدم فوق
+                },
+                body: JSON.stringify({
+                    model: "claude-sonnet-5",
+                    max_tokens: 500,
+                    messages: [{ role: "user", content: buildSmartSeoPrompt(keyword) }]
+                })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (requestId !== aiSeoRequestId) return;
+                const raw = data.content?.map(i => i.text || "").join("") || "";
+                const cleaned = raw.replace(/```json|```/g, "").trim();
+                const parsed = JSON.parse(cleaned);
+                renderAiSeoResult(parsed);
+            })
+            .catch(err => {
+                if (requestId !== aiSeoRequestId) return;
+                console.error('تعذر تحليل الكلمة بالذكاء الاصطناعي:', err);
+                // أي فشل (مفيش مفتاح API، مفيش نت...) منمسحش ومنبوظش حاجة -
+                // بس بنشيل مؤشر التحميل، والنتيجة الفورية الأصلية فاضلة
+                // كاملة وشغالة عادي زي ما كانت
+                const block = document.getElementById('aiSeoBlock');
+                if (block) block.remove();
+            });
+        }
+
+        // بترسم رد الـ AI: نصيحة ذكية تتضاف تحت السكور الأصلي + تاجات
+        // إضافية ذكية تتضاف جوه نفس صندوق التاجات الموجود، بعلامة 🤖 عشان
+        // تتميز بصرياً عن التاجات الثابتة من غير ما تتكرر أو تتلخبط بيها
+        function renderAiSeoResult(parsed) {
+            const block = document.getElementById('aiSeoBlock');
+            const tip = (parsed && parsed.tip) ? String(parsed.tip) : '';
+            if (block) {
+                if (tip) {
+                    block.innerHTML = `
+                        <p class="text-[11px] text-purple-300 font-bold mb-1">🤖 تحليل ذكاء اصطناعي إضافي:</p>
+                        <p class="text-[11px] text-gray-300">${tip}</p>
+                    `;
+                } else {
+                    block.remove();
+                }
+            }
+
+            const list = document.getElementById('tagsList');
+            const aiTags = (parsed && Array.isArray(parsed.tags)) ? parsed.tags : [];
+            if (!list) return;
+            const existing = Array.from(list.children).map(el => el.dataset.rawTag || el.innerText);
+
+            aiTags.forEach(t => {
+                if (!t || existing.includes(t)) return;
+                const s = document.createElement('span');
+                s.className = 'bg-indigo-950/60 px-2 py-0.5 rounded border border-indigo-700 text-[11px] cursor-pointer hover:opacity-80 transition text-indigo-300';
+                s.innerText = `🤖 ${t}`;
+                s.dataset.rawTag = t;
+                s.title = "اقتراح اقوي - اضغط لنسخه";
+                s.onclick = () => { navigator.clipboard.writeText(t); showToast(`📋 تم نسخ: ${t}`); };
+                list.appendChild(s);
+            });
+        }
+
+        // تحسين بسيط لزرار "نسخ الكلمات المفتاحية بالكامل": لو فيه تاجات
+        // ذكاء اصطناعي مضافة، بننسخها نضيفة من غير علامة 🤖، من غير ما
+        // نلمس كود الفنكشن الأصلية نفسه
+        var originalCopyAllTags = copyAllTags;
+        copyAllTags = function() {
+            const list = document.getElementById('tagsList');
+            const hasAiTags = list && list.querySelector('[data-raw-tag]');
+            if (!hasAiTags) { originalCopyAllTags(); return; }
+
+            const items = Array.from(list.children).map(el => el.dataset.rawTag || el.innerText).filter(Boolean);
+            navigator.clipboard.writeText(items.join(', '));
+            showToast('📋 تم نسخ الكلمات المفتاحية بالكامل!');
+        };
+    </script>
 </body>
 </html>
