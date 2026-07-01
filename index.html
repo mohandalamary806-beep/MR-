@@ -3143,6 +3143,7 @@
             var nameInput = document.getElementById('profileNameInput');
             var newName = nameInput ? sanitizeDisplayName(nameInput.value.trim()).slice(0, 30) : '';
             var nameChanged = !!(newName && newName !== currentUser.name);
+            var nameChangeBlockedRemainingDays = null;
 
             // نفس قاعدة الـ 7 أيام المستخدمة في زرار "تعديل الاسم" الأصلي، عشان نفضل متوافقين معاه
             if (nameChanged) {
@@ -3153,7 +3154,7 @@
                     var elapsedMs = Date.now() - parseInt(lastChanged, 10);
                     if (elapsedMs < sevenDaysMs) {
                         var remainingDays = Math.ceil((sevenDaysMs - elapsedMs) / (24 * 60 * 60 * 1000));
-                        showToast('⏳ تقدر تغيّر اسمك تاني بعد ' + remainingDays + ' يوم (الصورة واللون اتحفظوا عادي)');
+                        nameChangeBlockedRemainingDays = remainingDays;
                         nameChanged = false;
                     }
                 }
@@ -3179,7 +3180,12 @@
             renderComments();
             syncProfileToFirestore();
             closeModalDirect('profileModal');
-            showToast('✅ تم حفظ ملفك الشخصي بنجاح');
+
+            if (nameChangeBlockedRemainingDays !== null) {
+                showToast('✅ تم حفظ التغييرات، لكن الاسم لن يتغير إلا بعد ' + nameChangeBlockedRemainingDays + ' يوم');
+            } else {
+                showToast('✅ تم حفظ ملفك الشخصي بنجاح');
+            }
         }
 
         // ---------- مزامنة الصورة/الاسم/اللون مع Firebase عشان تظهر لو دخل من جهاز تاني ----------
