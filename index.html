@@ -3317,7 +3317,7 @@
         const comment = document.getElementById('commentTextInput').value;
         if (comment.length > 10) return "لديك تعليق لم يتم نشره، هل أنت متأكد من المغادرة؟";
     };
-   function scanRobloxScript() {
+function scanRobloxScript() {
         const code = document.getElementById('scannerInput').value;
         const resultBox = document.getElementById('scannerResult');
 
@@ -3330,8 +3330,8 @@
         resultBox.innerHTML = '<div class="text-center text-yellow-400"><span class="animate-spin inline-block">⏳</span> جاري التحليل...</div>';
 
         setTimeout(() => {
-            // --- طبقة التحقق: هل ده كود برمجي؟ ---
-            const codeMarkers = ['local', 'function', 'end', 'if', 'then', '{', '}', '=', 'print'];
+            // --- تحديث قائمة الكلمات المفتاحية عشان تشمل الـ loadstrings والـ game: ---
+            const codeMarkers = ['local', 'function', 'end', 'if', 'then', '{', '}', '=', 'print', 'loadstring', 'game:', 'HttpGet', 'require'];
             const isLikelyCode = codeMarkers.some(marker => code.toLowerCase().includes(marker));
 
             if (!isLikelyCode) {
@@ -3339,28 +3339,33 @@
                 return;
             }
 
-            // --- عملية الفحص (بعد التأكد إنه كود) ---
+            // --- عملية الفحص ---
             let score = 0;
             let issues = [];
 
+            // فحص التعمية
             if (code.match(/\\x[0-9a-f]{2}/gi) || code.match(/_0x[a-f0-9]{4,}/gi)) {
                 score += 5;
                 issues.push('🔴 **تعمية كود (Obfuscation):** الكود مشفر ومحمي.');
             }
 
+            // فحص الـ loadstring (بدون ما نرفضه تماماً، بس نحذر منه)
             if (code.includes('loadstring')) {
                 score += 3;
-                issues.push('⚠️ استخدام <code>loadstring</code>: دالة قد تعرضك للخطر.');
+                issues.push('⚠️ استخدام <code>loadstring</code>: قد يكون آمناً، لكنه يفتح باب لتنفيذ أكواد خارجية.');
             }
             
-            // باقي منطق الفحص كما هو...
-            // (تقدر تضيف باقي الـ checks اللي كانت موجودة هنا)
+            // فحص الاتصالات الخارجية
+            if (code.includes('HttpService') || code.includes('webhook')) {
+                score += 2;
+                issues.push('🟡 اتصالات خارجية: الكود بيحاول يكلم سيرفر بره روبلوكس.');
+            }
 
             let resultHTML = '';
             if (score === 0) {
                 resultHTML = '<div class="text-green-400 font-bold text-center">✅ لم يتم العثور على أنماط مشبوهة.</div>';
             } else {
-                resultHTML = `<div class="text-red-500 font-bold text-center mb-2">🚨 خطر!</div>
+                resultHTML = `<div class="text-red-500 font-bold text-center mb-2">🚨 تنبيه أمني:</div>
                               <ul class="list-disc pr-4 text-gray-300 text-sm">${issues.map(i => `<li>${i}</li>`).join('')}</ul>`;
             }
 
