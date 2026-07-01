@@ -3317,61 +3317,66 @@
         const comment = document.getElementById('commentTextInput').value;
         if (comment.length > 10) return "لديك تعليق لم يتم نشره، هل أنت متأكد من المغادرة؟";
     };
-        function scanRobloxScript() {
+    function scanRobloxScript() {
         const code = document.getElementById('scannerInput').value;
         const resultBox = document.getElementById('scannerResult');
 
-        if (!code.trim()) {
-            showToast('⚠️ يرجى إدخال الكود أولاً للفحص!');
+        if (code.trim().length < 10) {
+            showToast('⚠️ الكود قصير جداً عشان أقدر أحلله!');
             return;
         }
 
         resultBox.classList.remove('hidden');
-        resultBox.innerHTML = '<div class="text-center text-yellow-400"><span class="animate-spin inline-block">⏳</span> جاري الفحص الذكي...</div>';
+        resultBox.innerHTML = '<div class="text-center text-yellow-400"><span class="animate-spin inline-block">⏳</span> جاري التحليل العميق...</div>';
 
-        // محاكاة لعملية الفحص عشان تدي إحساس احترافي
         setTimeout(() => {
-            let warnings = [];
-            let dangerLevel = 0;
+            let score = 0; // نظام النقاط
+            let issues = [];
 
-            // التحقق من دوال الاختراق والتحكم عن بعد
-            if (/loadstring\s*\(/.test(code)) {
-                warnings.push('🔴 يحتوي على <code>loadstring</code>: دالة خطيرة لتنفيذ أكواد خارجية وقد تعرض حسابك للحظر.');
-                dangerLevel += 3;
-            }
-            if (/require\s*\(\s*\d+\s*\)/.test(code)) {
-                warnings.push('🟠 يحتوي على <code>require(AssetID)</code>: يستدعي موديل خارجي، تأكد من أن الـ ID موثوق وليس فيروساً.');
-                dangerLevel += 2;
-            }
-            if (/getfenv\s*\(/.test(code)) {
-                warnings.push('🔴 يحتوي على <code>getfenv</code>: تُستخدم غالباً لإخفاء الأكواد الخبيثة (Obfuscation) وتعتبر مخالفة.');
-                dangerLevel += 3;
-            }
-            if (/HttpService:(GetAsync|PostAsync)/.test(code)) {
-                warnings.push('🟡 يحتوي على <code>HttpService</code>: الكود يرسل أو يستقبل بيانات من سيرفرات خارجية (مثل Discord Webhooks).');
-                dangerLevel += 1;
-            }
-            if (/(teleport|Kick|Ban)\s*\(/i.test(code)) {
-                warnings.push('🟡 يحتوي على أوامر طرد أو نقل لاعبين: تأكد أنك من وضع هذه الأوامر بصلاحيات الإدمن.');
-                dangerLevel += 1;
+            // 1. فحص التشفير والتعمية (Obfuscation) - دي أهم علامة خطر
+            // بيدور على الرموز الغريبة زي \x61 أو _0x...
+            if (code.match(/\\x[0-9a-f]{2}/gi) || code.match(/_0x[a-f0-9]{4,}/gi)) {
+                score += 5;
+                issues.push('🔴 **تعمية كود (Obfuscation):** الكود مشفر ومحمي، غالباً لإخفاء وظائف خبيثة.');
             }
 
-            let html = '';
-            if (warnings.length === 0) {
-                html = '<div class="text-green-400 font-bold text-center">✅ الكود نظيف تماماً ويبدو آمناً!</div>';
+            // 2. فحص الدوال الخطيرة (وزن متوسط)
+            if (code.includes('loadstring')) {
+                score += 3;
+                issues.push('⚠️ استخدام <code>loadstring</code>: دالة قوية جداً بتسمح بتشغيل أي كود خارجي.');
+            }
+            if (code.includes('getfenv') || code.includes('setfenv')) {
+                score += 4;
+                issues.push('🔴 استخدام <code>getfenv</code>: دالة مشبوهة غالباً تُستخدم للتلاعب ببيئة اللعبة.');
+            }
+
+            // 3. فحص الاتصالات الخارجية (وزن خفيف)
+            if (code.includes('HttpService') || code.includes('webhook') || code.includes('discord.com')) {
+                score += 2;
+                issues.push('🟡 اتصالات خارجية: الكود بيحاول يكلم سيرفر بره روبلوكس (ممكن يكون Webhook للبيانات).');
+            }
+
+            // 4. فحص الأوامر المدمرة
+            if (code.match(/(Kick|Ban|Destroy|Remove)\s*\(/i)) {
+                score += 1;
+                issues.push('🟡 أوامر تحكم: الكود يحتوي على أوامر طرد أو حذف.');
+            }
+
+            // النتيجة النهائية بناءً على النقاط
+            let resultHTML = '';
+            if (score === 0) {
+                resultHTML = '<div class="text-green-400 font-bold text-center">✅ لم يتم العثور على أنماط مشبوهة. (لكن دائماً راجع الكود بنفسك!)</div>';
+            } else if (score < 4) {
+                resultHTML = `<div class="text-orange-400 font-bold text-center mb-2">⚠️ مستوى خطر منخفض (مقبول)</div>
+                              <ul class="list-disc pr-4 text-gray-300 text-sm">${issues.map(i => `<li>${i}</li>`).join('')}</ul>`;
             } else {
-                let status = dangerLevel >= 3 
-                    ? '<span class="text-rose-500 font-bold">🚨 خطير جداً (لا يُنصح به)</span>' 
-                    : '<span class="text-orange-400 font-bold">⚠️ يحتاج مراجعتك</span>';
-                
-                html = `<div class="mb-2 border-b border-yellow-900/30 pb-2">النتيجة: ${status}</div>`;
-                html += `<ul class="list-disc pr-4 space-y-2 text-gray-300">`;
-                warnings.forEach(w => html += `<li class="leading-relaxed">${w}</li>`);
-                html += `</ul>`;
+                resultHTML = `<div class="text-red-500 font-bold text-center mb-2">🚨 خطر عالي جداً!</div>
+                              <ul class="list-disc pr-4 text-gray-300 text-sm">${issues.map(i => `<li>${i}</li>`).join('')}</ul>
+                              <p class="mt-2 text-xs text-red-300">نصيحة: لا تستخدم هذا الكود في مابك.</p>`;
             }
 
-            resultBox.innerHTML = html;
-        }, 800);
+            resultBox.innerHTML = resultHTML;
+        }, 1000);
     }
     </script>
 
