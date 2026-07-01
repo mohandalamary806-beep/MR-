@@ -3270,6 +3270,37 @@
             originalRenderComments_profileWrap();
             applyOwnAvatarToComments();
         };
+
+        // 1. إضافة "عداد أداء" بسيط (SEO & Performance Meter)
+    // يساعدك تعرف سرعة تحميل الصفحة عند الزوار
+    window.addEventListener('load', () => {
+        setTimeout(() => {
+            const time = window.performance.timing;
+            const loadTime = (time.loadEventEnd - time.navigationStart) / 1000;
+            console.log(`🚀 سرعة تحميل المنصة: ${loadTime} ثانية`);
+        }, 2000);
+    });
+
+    // 2. تفعيل "النسخ الذكي" (Auto-Copy for Script Snippets)
+    // عند الضغط مرتين على أي كود، يتم نسخه تلقائياً
+    document.addEventListener('dblclick', (e) => {
+        if (e.target.tagName === 'PRE' || e.target.classList.contains('font-mono')) {
+            const text = e.target.innerText;
+            navigator.clipboard.writeText(text);
+            // استخدام التوست الموجود مسبقاً في كودك
+            const toast = document.getElementById('toast');
+            toast.innerText = "📋 تم نسخ الكود تلقائياً!";
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2000);
+        }
+    });
+
+    // 3. منع "إغلاق الصفحة بالخطأ" أثناء كتابة تعليق طويل
+    // عشان لو الزائر كتب تعليق كبير ما يضيعش لو قفل الصفحة بالغلط
+    window.onbeforeunload = function() {
+        const comment = document.getElementById('commentTextInput').value;
+        if (comment.length > 10) return "لديك تعليق لم يتم نشره، هل أنت متأكد من المغادرة؟";
+    };
     </script>
 
 </body>
