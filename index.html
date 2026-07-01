@@ -3301,52 +3301,6 @@
         const comment = document.getElementById('commentTextInput').value;
         if (comment.length > 10) return "لديك تعليق لم يتم نشره، هل أنت متأكد من المغادرة؟";
     };
-        // استيراد الدوال اللازمة من Firebase SDK
-import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, doc, updateDoc, increment } from "firebase/firestore";
-
-const db = getFirestore();
-
-// 1. دالة لإضافة مشاركة جديدة
-async function submitChallenge(username, link, desc) {
-    await addDoc(collection(db, "weekly_challenges"), {
-        username: username,
-        content_link: link,
-        description: desc,
-        votes: 0,
-        timestamp: new Date()
-    });
-}
-
-// 2. دالة لجلب التحديات وعرضها في الصفحة
-function loadChallenges() {
-    const q = query(collection(db, "weekly_challenges"), orderBy("votes", "desc"));
-    
-    onSnapshot(q, (snapshot) => {
-        const container = document.getElementById("challenge-container");
-        container.innerHTML = ""; // مسح القديم
-        
-        snapshot.forEach((doc) => {
-            const data = doc.data();
-            container.innerHTML += `
-                <div class="challenge-card">
-                    <h3>${data.username}</h3>
-                    <p>${data.description}</p>
-                    <a href="${data.content_link}" target="_blank">رابط المشاركة</a>
-                    <p>عدد الأصوات: ${data.votes}</p>
-                    <button onclick="vote('${doc.id}')">تصويت ❤️</button>
-                </div>
-            `;
-        });
-    });
-}
-
-// 3. دالة للتصويت
-async function vote(docId) {
-    const docRef = doc(db, "weekly_challenges", docId);
-    await updateDoc(docRef, {
-        votes: increment(1)
-    });
-}
     </script>
 
 </body>
