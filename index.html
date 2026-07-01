@@ -2258,67 +2258,14 @@
         }
     </script>
     <!-- ============================================================
-         إضافة جديدة تانية: زرار "تعديل الاسم" جنب زرار "خروج"،
-         مع قاعدة إنه يقدر يغيّر اسمه تاني بس بعد مرور 7 أيام من آخر تغيير.
-         (برضو مفيش أي سطر من فوق - سواء الأصلي أو اللي اتضاف قبل كده - اتغير أو اتحذف)
+         تعديل: تم حذف زرار "تعديل الاسم" المستقل اللي كان ظاهر جنب
+         زرار "خروج"، لأن تعديل الاسم بقى متاح خلاص من جوا "الملف
+         الشخصي" (بتفتحه من زرار الأفاتار)، فمبقاش له لازمة وهو
+         مكرر. اللي فاضل تحت بس هو تسجيل "وقت آخر تغيير للاسم"،
+         لأن saveProfileChanges جوا الملف الشخصي بتستخدم نفس
+         التسجيل ده في حساب قاعدة الـ 7 أيام، فسايبينه شغال زي ما هو.
     ============================================================ -->
     <script>
-        // بنحتفظ بنسخة من applyLoggedInUI (اللي بترسم منطقة تسجيل الدخول)
-        // عشان نضيف زرار التعديل بعدها من غير ما نلمس كودها الأصلي
-        var originalApplyLoggedInUI = applyLoggedInUI;
-
-        applyLoggedInUI = function() {
-            originalApplyLoggedInUI();
-            addEditNameButton();
-        };
-
-        // بيضيف زرار "تعديل الاسم" في منطقة تسجيل الدخول، جنب زرار "خروج"
-        function addEditNameButton() {
-            var authZone = document.getElementById('auth-zone');
-            if (!authZone) return;
-
-            var oldBtn = document.getElementById('editDisplayNameBtn');
-            if (oldBtn) oldBtn.remove();
-
-            var logoutBtn = authZone.querySelector('button[onclick="logoutUser()"]');
-            if (!logoutBtn) return;
-
-            var editBtn = document.createElement('button');
-            editBtn.id = 'editDisplayNameBtn';
-            editBtn.textContent = '✏️ تعديل الاسم';
-            editBtn.className = 'text-purple-400 underline ml-2 hover:text-purple-300';
-            editBtn.onclick = openEditNameModal;
-
-            logoutBtn.insertAdjacentElement('beforebegin', editBtn);
-        }
-
-        // بيحسب هل المستخدم مسموح يغيّر اسمه دلوقتي، ولا لسه ما خلصش 7 أيام من آخر مرة
-        function openEditNameModal() {
-            if (!currentUser) return;
-
-            var lastChangedKey = 'mrg_custom_name_changed_at_' + currentUser.id;
-            var lastChanged = localStorage.getItem(lastChangedKey);
-            var sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
-
-            if (lastChanged) {
-                var elapsedMs = Date.now() - parseInt(lastChanged, 10);
-                if (elapsedMs < sevenDaysMs) {
-                    var remainingDays = Math.ceil((sevenDaysMs - elapsedMs) / (24 * 60 * 60 * 1000));
-                    showToast('⏳ تقدر تغيّر اسمك تاني بعد ' + remainingDays + ' يوم');
-                    return;
-                }
-            }
-
-            var heading = document.querySelector('#chooseNameModal h3');
-            if (heading) heading.textContent = '✏️ غيّر اسمك في الموقع';
-
-            var input = document.getElementById('customDisplayNameInput');
-            if (input) input.value = currentUser.name || '';
-
-            var modal = document.getElementById('chooseNameModal');
-            if (modal) modal.classList.add('open');
-        }
-
         // بنحتفظ بنسخة من confirmCustomDisplayName عشان نسجل وقت التغيير بعدها
         // من غير ما نلمس كودها الأصلي اللي اتضاف قبل كده
         var originalConfirmCustomDisplayName = confirmCustomDisplayName;
