@@ -1417,27 +1417,70 @@
             const list = document.getElementById('tagsList');
             list.innerHTML = "";
             const currentYear = new Date().getFullYear();
-            let baseTags = [
-                keyword,
-                `${keyword} ${currentYear}`,
-                `أسرار ${keyword}`,
-                `كيفية تشغيل ${keyword}`,
-                `احتراف ${keyword}`,
-                `أفضل ${keyword}`
+            // ================================================================
+            // تعديل: بدل ما الكلمات المقترحة ترجع نفس المجموعة الجاهزة في كل
+            // مرة (كانت بترجع نفس القوالب ونفس الـ 3 هاشتاجات ثابتين مهما
+            // كانت الكلمة المكتوبة)، بقت الأداة تبني الاقتراحات من مجموعات
+            // متنوعة وتختار منها بذكاء حسب سياق الكلمة نفسها (فيها اسم لعبة
+            // معروفة؟ فيها أصلاً نية بحث زي "شرح" أو "تجربة"؟ طويلة أو
+            // قصيرة؟) مع عنصر عشوائية في الاختيار، عشان كل عملية استخراج
+            // تطلع بمجموعة مختلفة وأقرب فعلاً لمعنى الكلمة، مش نفس القالب
+            // الجامد كل مرة. (باقي الفنكشن - السكور والنصايح والفكرة
+            // وطريقة عرض التاجات - زي ما هو من غير أي تغيير)
+            // ================================================================
+            function pickRandomTags(pool, count) {
+                const copy = pool.slice();
+                const picked = [];
+                while (copy.length && picked.length < count) {
+                    picked.push(copy.splice(Math.floor(Math.random() * copy.length), 1)[0]);
+                }
+                return picked;
+            }
+
+            const lowerKeyword = keyword.toLowerCase();
+            const intentTemplates = [
+                { w: 'شرح',        t: `شرح ${keyword}` },
+                { w: 'تجربتي',      t: `تجربتي مع ${keyword}` },
+                { w: 'اسرار',      t: `أسرار ${keyword}` },
+                { w: 'كيفية',      t: `كيفية تشغيل ${keyword}` },
+                { w: 'احتراف',     t: `احتراف ${keyword}` },
+                { w: 'افضل',       t: `أفضل ${keyword}` },
+                { w: 'للمبتدئين',  t: `${keyword} للمبتدئين` },
+                { w: 'حل مشكلة',   t: `حل مشكلة ${keyword}` },
+                { w: 'اخطاء',      t: `أخطاء شائعة في ${keyword}` },
+                { w: 'خطوة بخطوة', t: `${keyword} خطوة بخطوة` },
+                { w: 'تحديث',      t: `تحديث ${keyword}` },
+                { w: 'مراجعة',     t: `مراجعة ${keyword}` }
             ];
+            // منستبعدش من المجموعة أي صيغة فيها كلمة نية موجودة أصلاً جوه
+            // الكلمة المكتوبة، عشان منطلعش باقتراح مكرر زي "شرح شرح ..."
+            const intentPool = intentTemplates
+                .filter(item => !lowerKeyword.includes(item.w))
+                .map(item => item.t);
+
+            let baseTags = [keyword, `${keyword} ${currentYear}`];
+            baseTags.push(...pickRandomTags(intentPool, isLongTail ? 3 : 4));
 
             // لو الكلمة خاصة بلعبة معروفة، نضيف تاجات ذكية مخصوصة لنفس اللعبة دي
             if (matchedGame) {
-                baseTags.push(
+                const gamePool = [
                     `شرح ${matchedGame.name}`,
                     `${matchedGame.name} ${currentYear}`,
                     `تجربتي مع ${matchedGame.name}`,
+                    `أفضل إعدادات ${matchedGame.name}`,
+                    `جديد ${matchedGame.name}`,
                     `#${matchedGame.tag}`,
                     `#${matchedGame.tag}_عربي`
-                );
+                ];
+                baseTags.push(...pickRandomTags(gamePool, 3));
             }
 
-            baseTags.push(`#MR_Gaming`, `#رولبوكس_عربي`, `#سكربتات_الجيمرز`);
+            // هاشتاجات مجتمعية متنوعة بدل نفس الـ 3 هاشتاجات الثابتة في كل
+            // مرة - بنثبت هاشتاج البراند نفسه بس عشان يفضل جزء من هوية
+            // القناة، والباقي بيتغير حسب الاختيار
+            const communityPool = ['#رولبوكس_عربي', '#سكربتات_الجيمرز', '#جيمنج_عربي', '#العاب_عربي', '#تريند_جيمنج'];
+            baseTags.push(`#MR_Gaming`);
+            baseTags.push(...pickRandomTags(communityPool, 2));
 
             // إزالة أي تكرار محتمل لو الكلمة المكتوبة أصلاً فيها اسم اللعبة
             baseTags = [...new Set(baseTags)];
